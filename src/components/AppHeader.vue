@@ -21,42 +21,42 @@
 
                     <transition name="dropdown">
                         <div v-if="clubMenuOpen" class="dropdown-menu">
-                            <router-link to="/clubs" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">📋</span>
                                 <div>
                                     <p class="dropdown-title">동아리 목록</p>
                                     <p class="dropdown-desc">전체 동아리를 확인하세요</p>
                                 </div>
                             </router-link>
-                            <router-link to="/clubs/register" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">➕</span>
                                 <div>
                                     <p class="dropdown-title">동아리 등록</p>
                                     <p class="dropdown-desc">새 동아리를 만들어보세요</p>
                                 </div>
                             </router-link>
-                            <router-link to="/members" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">👥</span>
                                 <div>
                                     <p class="dropdown-title">회원 관리</p>
                                     <p class="dropdown-desc">동아리 회원을 관리하세요</p>
                                 </div>
                             </router-link>
-                            <router-link to="/dues" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">💰</span>
                                 <div>
                                     <p class="dropdown-title">회비 관리</p>
                                     <p class="dropdown-desc">회비 납부 현황을 확인하세요</p>
                                 </div>
                             </router-link>
-                            <router-link to="/schedule" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">📅</span>
                                 <div>
                                     <p class="dropdown-title">일정 관리</p>
                                     <p class="dropdown-desc">동아리 일정을 등록하세요</p>
                                 </div>
                             </router-link>
-                            <router-link to="/board" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">📋</span>
                                 <div>
                                     <p class="dropdown-title">게시판</p>
@@ -93,21 +93,21 @@
                                     </div>
                                 </div>
                                 <div class="dropdown-divider" />
-                                <router-link to="/my/profile" class="dropdown-item" @click="profileMenuOpen = false">
+                                <router-link to="/" class="dropdown-item" @click="profileMenuOpen = false">
                                     <span class="dropdown-icon">👤</span>
                                     <div>
                                         <p class="dropdown-title">내 프로필</p>
                                         <p class="dropdown-desc">프로필 정보 확인 및 수정</p>
                                     </div>
                                 </router-link>
-                                <router-link to="/my/clubs" class="dropdown-item" @click="profileMenuOpen = false">
+                                <router-link to="/" class="dropdown-item" @click="profileMenuOpen = false">
                                     <span class="dropdown-icon">🏛️</span>
                                     <div>
                                         <p class="dropdown-title">내 동아리</p>
                                         <p class="dropdown-desc">가입된 동아리 목록</p>
                                     </div>
                                 </router-link>
-                                <router-link to="/my/settings" class="dropdown-item" @click="profileMenuOpen = false">
+                                <router-link to="/" class="dropdown-item" @click="profileMenuOpen = false">
                                     <span class="dropdown-icon">⚙️</span>
                                     <div>
                                         <p class="dropdown-title">설정</p>
@@ -153,35 +153,35 @@
                 <template v-if="isLoggedIn">
                     <div class="mobile-section">
                         <p class="mobile-section-title">동아리 관리</p>
-                        <router-link to="/clubs" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             📋 동아리 목록
                         </router-link>
-                        <router-link to="/clubs/register" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             ➕ 동아리 등록
                         </router-link>
-                        <router-link to="/members" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             👥 회원 관리
                         </router-link>
-                        <router-link to="/dues" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             💰 회비 관리
                         </router-link>
-                        <router-link to="/schedule" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             📅 일정 관리
                         </router-link>
-                        <router-link to="/board" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             📋 게시판
                         </router-link>
                     </div>
 
                     <div class="mobile-section">
                         <p class="mobile-section-title">내 정보</p>
-                        <router-link to="/my/profile" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             👤 내 프로필
                         </router-link>
-                        <router-link to="/my/clubs" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             🏛️ 내 동아리
                         </router-link>
-                        <router-link to="/my/settings" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
                             ⚙️ 설정
                         </router-link>
                     </div>

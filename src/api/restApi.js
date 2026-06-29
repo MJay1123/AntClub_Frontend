@@ -1,11 +1,12 @@
 import api from "./axios";
 
+export const authApi = {
+    login: (request) => api.post("/member/login", request),
+}
+
 export const memberApi = {
     createMember: (data) => api.post("/member", data),
-    // getMe: () => api.get('/member/me'),
-    // updateMemberImage: (imageFile) => api.patch(`/member/me/image`, imageFile),
-    // updateMemberPassword: (dto) => api.patch(`/member/me/password`, dto),
-    // updateMemberInfo: (dto) => api.patch(`/member/me`, dto),
+    getMember: (memberId) => api.get(`/member/${memberId}`)
 }
 
 export const schoolApi = {

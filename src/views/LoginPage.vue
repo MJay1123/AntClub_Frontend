@@ -1,7 +1,6 @@
 <template>
   <div class="login-page">
     <div class="login-container">
-      <!-- Left Panel -->
       <div class="left-panel">
         <div class="left-content">
           <router-link to="/" class="back-logo">
@@ -22,20 +21,12 @@
         </div>
       </div>
 
-      <!-- Right Panel (Form) -->
       <div class="right-panel">
         <div class="form-wrapper">
           <h2 class="form-title">로그인</h2>
           <p class="form-subtitle">AntClub 계정으로 시작하세요</p>
 
-          <!-- Error Alert -->
-          <div v-if="authStore.error" class="alert alert-error">
-            <span>⚠️</span>
-            <span>{{ authStore.error }}</span>
-          </div>
-
           <form @submit.prevent="handleLogin" class="form">
-            <!-- Email -->
             <div class="form-group">
               <label class="form-label">
                 <span class="label-icon">📧</span> 이메일
@@ -51,7 +42,6 @@
               <span v-if="errors.email" class="error-msg">{{ errors.email }}</span>
             </div>
 
-            <!-- Password -->
             <div class="form-group">
               <label class="form-label">
                 <span class="label-icon">🔒</span> 비밀번호
@@ -76,7 +66,6 @@
               <span v-if="errors.password" class="error-msg">{{ errors.password }}</span>
             </div>
 
-            <!-- Options -->
             <div class="form-options">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="rememberMe" />
@@ -85,23 +74,20 @@
               <a href="#" class="forgot-link">비밀번호 찾기</a>
             </div>
 
-            <!-- Submit -->
             <button
               type="submit"
               class="btn-submit"
-              :disabled="authStore.isLoading"
+              :disabled="uiStore.isLoading"
             >
-              <span v-if="authStore.isLoading" class="spinner">⟳</span>
+              <span v-if="uiStore.isLoading" class="spinner">⟳</span>
               <span v-else>로그인</span>
             </button>
           </form>
 
-          <!-- Divider -->
           <div class="divider">
             <span>또는</span>
           </div>
 
-          <!-- Register Link -->
           <p class="register-link">
             아직 계정이 없으신가요?
             <router-link to="/register">회원가입 →</router-link>
@@ -115,8 +101,11 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from '@/stores/ui' // ⭐️ uiStore 추가
+import router from '@/router'
 
 const authStore = useAuthStore()
+const uiStore = useUiStore() // ⭐️ uiStore 초기화
 
 const form = reactive({
   email: '',
@@ -164,7 +153,24 @@ const validateForm = () => {
 
 const handleLogin = async () => {
   if (!validateForm()) return
-  await authStore.login(form.email, form.password)
+
+  uiStore.isLoading = true
+
+  try {
+    const request = {
+      email : form.email,
+      password : form.password
+    }
+
+    await authStore.login(request)
+    router.push('/')
+
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
+  } finally {
+    uiStore.isLoading = false
+  }
 }
 </script>
 
