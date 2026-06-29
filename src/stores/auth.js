@@ -27,6 +27,7 @@ export const useAuthStore = defineStore("auth", () => {
 
   const fetchMe = async () => {
     const memberId = localStorage.getItem('memberId')
+    if(!memberId) return
     try {
       const response = await memberApi.getMember(memberId)
       userInfo.value = response.data

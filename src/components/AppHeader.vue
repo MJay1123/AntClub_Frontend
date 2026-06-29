@@ -217,7 +217,7 @@ const clubMenuOpen = ref(false);
 const profileMenuOpen = ref(false);
 const mobileMenuOpen = ref(false);
 
-const { isLoggedIn } = storeToRefs(authStore)
+const { userInfo, isLoggedIn } = storeToRefs(authStore)
 
 const isClubRoute = computed(() =>
     ["/clubs", "/members", "/dues", "/schedule", "/board"].some((p) => route.path.startsWith(p)),
@@ -234,7 +234,10 @@ const handleLogout = () => {
     router.push('/'); // 로그아웃 후 홈으로 리다이렉트 (필요에 따라 수정)
 };
 
-onMounted(() => window.addEventListener("scroll", handleScroll));
+onMounted(async () => {
+    window.addEventListener("scroll", handleScroll), 
+    await authStore.fetchMe()
+});
 onUnmounted(() => window.removeEventListener("scroll", handleScroll));
 </script>
 
