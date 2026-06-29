@@ -1,45 +1,45 @@
-import { useAuthStore } from '@/stores/auth'
-import LoginPage from '@/views/LoginPage.vue'
-import MainPage from '@/views/MainPage.vue'
-import MajorPage from '@/views/MajorPage.vue'
-import MemberPage from '@/views/MemberPage.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+// router/index.js
+import { createRouter, createWebHistory } from "vue-router";
+import MainPage from "@/views/MainPage.vue";
+import LoginPage from "@/views/LoginPage.vue";
+import RegisterPage from "@/views/RegisterPage.vue";
 
 const routes = [
   {
-    path: '/',
-    name: 'main',
+    path: "/",
+    redirect: "/main",
+  },
+  {
+    path: "/main",
+    name: "Main",
     component: MainPage,
-    meta: {requiresAuth: true}
   },
   {
-    path: '/login',
-    name: 'login',
+    path: "/login",
+    name: "Login",
     component: LoginPage,
+    meta: { guestOnly: true },
   },
   {
-    path: '/majors',
-    name: 'major-list',
-    component: MajorPage,
+    path: "/register",
+    name: "Register",
+    component: RegisterPage,
+    meta: { guestOnly: true },
   },
-  {
-    path: '/members',
-    name: 'member-list',
-    component: MemberPage
-  }
-]
+];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes
-})
+  history: createWebHistory(),
+  routes,
+});
 
-// 로그인 필요 시에 로그인 화면으로 이동
-router.beforeEach((to) => {
-  const authStore = useAuthStore();
-  if(to.meta.requiresAuth && !authStore.isLoggedIn){
-    return {name: 'login'}
-  }
-})
+// router.beforeEach((to, from, next) => {
+//   const token = localStorage.getItem("token");
+//   if (to.meta.guestOnly && token) {
+//     next("/");
+//   } else {
+//     next();
+//   }
+// });
 
-export default router
+export default router;
