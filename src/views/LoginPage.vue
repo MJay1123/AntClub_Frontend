@@ -155,6 +155,7 @@ const handleLogin = async () => {
   if (!validateForm()) return
 
   uiStore.isLoading = true
+  let isSuccess = false
 
   try {
     const request = {
@@ -163,13 +164,19 @@ const handleLogin = async () => {
     }
 
     await authStore.login(request)
-    router.push('/')
 
+    isSuccess = true
+    
   } catch (error) {
     uiStore.isError = true
     uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
   } finally {
     uiStore.isLoading = false
+  }
+
+  if(isSuccess){
+    await uiStore.alert('로그인 성공', '로그인에 성공하셨습니다!')
+    router.push('/')
   }
 }
 </script>

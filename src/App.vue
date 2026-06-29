@@ -13,6 +13,16 @@
         </transition>
       </router-view>
     </div>
+
+    <NotificationModal
+      v-if="modal.show"
+      :show="modal.show"
+      :mode="modal.mode"
+      :title="modal.title"
+      :content="modal.content"
+      @confirm="uiStore.onConfirm"
+      @cancel="uiStore.onCancel"
+    />
   </main>
   
   <footer>
@@ -23,19 +33,22 @@
 
 <script setup>
 import { onMounted } from 'vue'
-import AppHeader from '@/components/AppHeader.vue'
-import AppFooter from '@/components/AppFooter.vue'
-import { useAuthStore } from '@/stores/auth'
-import { useUiStore } from './stores/ui'
 import { storeToRefs } from 'pinia'
 
+import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from './stores/ui'
+
+import AppHeader from '@/components/AppHeader.vue'
+import AppFooter from '@/components/AppFooter.vue'
 import LoadingModal from './components/LoadingModal.vue'
 import ErrorModal from './components/ErrorModal.vue'
+import NotificationModal from './components/NotificationModal.vue'
 
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 
 const { isLoading, isError, errorMessage } = storeToRefs(uiStore)
+const { modal } = storeToRefs(uiStore)
 
 onMounted(() => {
   if (authStore.isLoggedIn) {

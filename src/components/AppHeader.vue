@@ -71,13 +71,13 @@
                     <div class="nav-dropdown" @mouseenter="profileMenuOpen = true" @mouseleave="profileMenuOpen = false">
                         <button class="nav-item nav-profile-trigger">
                             <div class="avatar">
-                                <img v-if="authStore.currentUser?.profileImage"
-                                    :src="authStore.currentUser.profileImage" alt="프로필" />
+                                <img v-if="userInfo?.profileImage"
+                                    :src="userInfo.profileImage" alt="프로필" />
                                 <span v-else class="avatar-fallback">
-                                    {{ authStore.currentUser?.name?.charAt(0) || "?" }}
+                                    {{ userInfo?.name?.charAt(0) || "?" }}
                                 </span>
                             </div>
-                            <span>{{ authStore.currentUser?.name || "내 정보" }}</span>
+                            <span>{{ userInfo?.name || "내 정보" }}</span>
                             <span class="dropdown-arrow" :class="{ rotated: profileMenuOpen }">▾</span>
                         </button>
 
@@ -85,11 +85,11 @@
                             <div v-if="profileMenuOpen" class="dropdown-menu dropdown-menu-right">
                                 <div class="dropdown-user-info">
                                     <div class="user-avatar-lg">
-                                        {{ authStore.currentUser?.name?.charAt(0) || "?" }}
+                                        {{ userInfo?.name?.charAt(0) || "?" }}
                                     </div>
                                     <div>
-                                        <p class="user-name">{{ authStore.currentUser?.name }}</p>
-                                        <p class="user-email">{{ authStore.currentUser?.email }}</p>
+                                        <p class="user-name">{{ userInfo?.name }}</p>
+                                        <p class="user-email">{{ userInfo?.email }}</p>
                                     </div>
                                 </div>
                                 <div class="dropdown-divider" />
@@ -136,7 +136,7 @@
                     </router-link>
                 </template>
             </nav>
-
+            
             <button class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
                 <span :class="{ open: mobileMenuOpen }"></span>
                 <span :class="{ open: mobileMenuOpen }"></span>
@@ -204,10 +204,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth";
 import { storeToRefs } from "pinia";
 
-const authStore = useAuthStore();
+import { useAuthStore } from "@/stores/auth";
+import { useUiStore } from "@/stores/ui";
+
+const authStore = useAuthStore()
+const uiStore = useUiStore()
 
 const route = useRoute();
 const router = useRouter(); // useRouter 추가
@@ -227,11 +230,29 @@ const handleScroll = () => {
     isScrolled.value = window.scrollY > 10;
 };
 
-const handleLogout = () => {
-    authStore.logout(); // authStore 내부에서 localStorage.removeItem('memberId') 등 처리 필요
-    profileMenuOpen.value = false;
-    mobileMenuOpen.value = false;
-    router.push('/'); // 로그아웃 후 홈으로 리다이렉트 (필요에 따라 수정)
+const handleLogout = async () => {
+    uiStore.isLoading = true
+    let isSuccess = false
+
+    try {
+        await authStore.logout();
+
+        isSuccess = true
+    } catch (error) {
+        uiStore.isError = true
+        uiStore.errorMessage = error.message || '로그아웃 중 오류가 발생했습니다.'
+    } finally {
+        uiStore.isLoading = false
+    }
+
+    if(isSuccess){
+        await uiStore.alert('로그아웃 성공', '로그아웃에 성공하셨습니다.')
+        profileMenuOpen.value = false;
+        mobileMenuOpen.value = false;
+        
+        router.push('/');
+    }
+    
 };
 
 onMounted(async () => {

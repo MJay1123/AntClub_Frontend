@@ -277,13 +277,15 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSchoolStore } from '@/stores/school'
 import { useMajorStore } from '@/stores/major' // 추가됨
+import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
 import { memberApi } from '@/api/restApi'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const schoolStore = useSchoolStore()
-const majorStore = useMajorStore() // 추가됨
+const majorStore = useMajorStore()
+const uiStore = useUiStore()
 
 const currentStep = ref(1)
 const showPassword = ref(false)
@@ -488,6 +490,8 @@ const handleSubmit = async () => {
         await memberApi.createMember(request);
         
         console.log('가입 성공!!!')
+
+        await uiStore.alert('회원가입 성공', '회원가입되었습니다. 로그인해 주세요!')
         
         router.push('/login')
         
