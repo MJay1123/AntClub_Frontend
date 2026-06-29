@@ -1,21 +1,18 @@
 <template>
     <header class="header" :class="{ scrolled: isScrolled }">
         <div class="header-inner">
-            <!-- Logo -->
-            <router-link to="/" class="logo">
+            <a href="#" class="logo" @click.prevent="router.push('/')">
                 <span class="logo-icon">🐜</span>
                 <span class="logo-text">AntClub</span>
-            </router-link>
+            </a>
 
-            <!-- Desktop Nav -->
             <nav class="nav-desktop">
-                <router-link to="/" class="nav-item" active-class="nav-active" exact>
+                <a href="#" class="nav-item" :class="{ 'nav-active': route.path === '/' }" @click.prevent="router.push('/')">
                     <span class="nav-icon">🏠</span>
                     <span>홈</span>
-                </router-link>
+                </a>
 
-                <!-- 동아리 관리 드롭다운 -->
-                <div class="nav-dropdown" @mouseenter="clubMenuOpen = true" @mouseleave="clubMenuOpen = false">
+                <div v-if="isLoggedIn" class="nav-dropdown" @mouseenter="clubMenuOpen = true" @mouseleave="clubMenuOpen = false">
                     <button class="nav-item nav-dropdown-trigger" :class="{ 'nav-active': isClubRoute }">
                         <span class="nav-icon">🏛️</span>
                         <span>동아리 관리</span>
@@ -24,57 +21,54 @@
 
                     <transition name="dropdown">
                         <div v-if="clubMenuOpen" class="dropdown-menu">
-                            <router-link to="/clubs" class="dropdown-item" @click="clubMenuOpen = false">
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">📋</span>
                                 <div>
                                     <p class="dropdown-title">동아리 목록</p>
                                     <p class="dropdown-desc">전체 동아리를 확인하세요</p>
                                 </div>
-                            </router-link>
-                            <router-link to="/clubs/register" class="dropdown-item" @click="clubMenuOpen = false">
+                            </a>
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">➕</span>
                                 <div>
                                     <p class="dropdown-title">동아리 등록</p>
                                     <p class="dropdown-desc">새 동아리를 만들어보세요</p>
                                 </div>
-                            </router-link>
-                            <router-link to="/members" class="dropdown-item" @click="clubMenuOpen = false">
+                            </a>
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">👥</span>
                                 <div>
                                     <p class="dropdown-title">회원 관리</p>
                                     <p class="dropdown-desc">동아리 회원을 관리하세요</p>
                                 </div>
-                            </router-link>
-                            <router-link to="/dues" class="dropdown-item" @click="clubMenuOpen = false">
+                            </a>
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">💰</span>
                                 <div>
                                     <p class="dropdown-title">회비 관리</p>
                                     <p class="dropdown-desc">회비 납부 현황을 확인하세요</p>
                                 </div>
-                            </router-link>
-                            <router-link to="/schedule" class="dropdown-item" @click="clubMenuOpen = false">
+                            </a>
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">📅</span>
                                 <div>
                                     <p class="dropdown-title">일정 관리</p>
                                     <p class="dropdown-desc">동아리 일정을 등록하세요</p>
                                 </div>
-                            </router-link>
-                            <router-link to="/board" class="dropdown-item" @click="clubMenuOpen = false">
+                            </a>
+                            <a href="#" class="dropdown-item">
                                 <span class="dropdown-icon">📋</span>
                                 <div>
                                     <p class="dropdown-title">게시판</p>
                                     <p class="dropdown-desc">공지 및 자유게시판</p>
                                 </div>
-                            </router-link>
+                            </a>
                         </div>
                     </transition>
                 </div>
 
-                <!-- 로그인 상태에 따라 분기 -->
-                <template v-if="authStore.isLoggedIn">
-                    <!-- 내 정보 드롭다운 -->
-                    <div class="nav-dropdown" @mouseenter="profileMenuOpen = true"
-                        @mouseleave="profileMenuOpen = false">
+                <template v-if="isLoggedIn">
+                    <div class="nav-dropdown" @mouseenter="profileMenuOpen = true" @mouseleave="profileMenuOpen = false">
                         <button class="nav-item nav-profile-trigger">
                             <div class="avatar">
                                 <img v-if="authStore.currentUser?.profileImage"
@@ -99,27 +93,27 @@
                                     </div>
                                 </div>
                                 <div class="dropdown-divider" />
-                                <router-link to="/my/profile" class="dropdown-item" @click="profileMenuOpen = false">
+                                <a href="#" class="dropdown-item">
                                     <span class="dropdown-icon">👤</span>
                                     <div>
                                         <p class="dropdown-title">내 프로필</p>
                                         <p class="dropdown-desc">프로필 정보 확인 및 수정</p>
                                     </div>
-                                </router-link>
-                                <router-link to="/my/clubs" class="dropdown-item" @click="profileMenuOpen = false">
+                                </a>
+                                <a href="#" class="dropdown-item">
                                     <span class="dropdown-icon">🏛️</span>
                                     <div>
                                         <p class="dropdown-title">내 동아리</p>
                                         <p class="dropdown-desc">가입된 동아리 목록</p>
                                     </div>
-                                </router-link>
-                                <router-link to="/my/settings" class="dropdown-item" @click="profileMenuOpen = false">
+                                </a>
+                                <a href="#" class="dropdown-item">
                                     <span class="dropdown-icon">⚙️</span>
                                     <div>
                                         <p class="dropdown-title">설정</p>
                                         <p class="dropdown-desc">계정 설정 변경</p>
                                     </div>
-                                </router-link>
+                                </a>
                                 <div class="dropdown-divider" />
                                 <button class="dropdown-item dropdown-logout" @click="handleLogout">
                                     <span class="dropdown-icon">🚪</span>
@@ -133,15 +127,16 @@
                 </template>
 
                 <template v-else>
-                    <router-link to="/login" class="nav-item" active-class="nav-active">
+                    <a href="#" class="nav-item" :class="{ 'nav-active': route.path === '/login' }">
                         <span class="nav-icon">🔑</span>
                         <span>로그인</span>
-                    </router-link>
-                    <router-link to="/register" class="btn-register"> 회원가입 </router-link>
+                    </a>
+                    <a href="#" class="btn-register">
+                        회원가입
+                    </a>
                 </template>
             </nav>
 
-            <!-- Mobile Hamburger -->
             <button class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
                 <span :class="{ open: mobileMenuOpen }"></span>
                 <span :class="{ open: mobileMenuOpen }"></span>
@@ -149,57 +144,57 @@
             </button>
         </div>
 
-        <!-- Mobile Menu -->
         <transition name="slide-down">
             <div v-if="mobileMenuOpen" class="mobile-menu">
-                <router-link to="/" class="mobile-nav-item" @click="mobileMenuOpen = false">
+                <a href="#" class="mobile-nav-item" :class="{ 'nav-active': route.path === '/' }">
                     🏠 홈
-                </router-link>
+                </a>
 
-                <div class="mobile-section">
-                    <p class="mobile-section-title">동아리 관리</p>
-                    <router-link to="/clubs" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        📋 동아리 목록
-                    </router-link>
-                    <router-link to="/clubs/register" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        ➕ 동아리 등록
-                    </router-link>
-                    <router-link to="/members" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        👥 회원 관리
-                    </router-link>
-                    <router-link to="/dues" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        💰 회비 관리
-                    </router-link>
-                    <router-link to="/schedule" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        📅 일정 관리
-                    </router-link>
-                    <router-link to="/board" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                        📋 게시판
-                    </router-link>
-                </div>
+                <template v-if="isLoggedIn">
+                    <div class="mobile-section">
+                        <p class="mobile-section-title">동아리 관리</p>
+                        <a href="#" class="mobile-nav-item sub">
+                            📋 동아리 목록
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
+                            ➕ 동아리 등록
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
+                            👥 회원 관리
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
+                            💰 회비 관리
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
+                            📅 일정 관리
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
+                            📋 게시판
+                        </a>
+                    </div>
 
-                <template v-if="authStore.isLoggedIn">
                     <div class="mobile-section">
                         <p class="mobile-section-title">내 정보</p>
-                        <router-link to="/my/profile" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        <a href="#" class="mobile-nav-item sub">
                             👤 내 프로필
-                        </router-link>
-                        <router-link to="/my/clubs" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
                             🏛️ 내 동아리
-                        </router-link>
-                        <router-link to="/my/settings" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
+                        </a>
+                        <a href="#" class="mobile-nav-item sub">
                             ⚙️ 설정
-                        </router-link>
+                        </a>
                     </div>
                     <button class="mobile-logout-btn" @click="handleLogout">🚪 로그아웃</button>
                 </template>
+
                 <template v-else>
-                    <router-link to="/login" class="mobile-nav-item" @click="mobileMenuOpen = false">
+                    <a href="#" class="mobile-nav-item" :class="{ 'nav-active': route.path === '/login' }">
                         🔑 로그인
-                    </router-link>
-                    <router-link to="/register" class="mobile-register-btn" @click="mobileMenuOpen = false">
+                    </a>
+                    <a href="#" class="mobile-register-btn">
                         회원가입
-                    </router-link>
+                    </a>
                 </template>
             </div>
         </transition>
@@ -208,16 +203,22 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 
 const authStore = useAuthStore();
 const route = useRoute();
+const router = useRouter(); // useRouter 추가
 
 const isScrolled = ref(false);
 const clubMenuOpen = ref(false);
 const profileMenuOpen = ref(false);
 const mobileMenuOpen = ref(false);
+
+// 로그인 상태 체크 (localStorage의 memberId 또는 authStore 활용)
+const isLoggedIn = computed(() => {
+    return authStore.isLoggedIn || !!localStorage.getItem("memberId");
+});
 
 const isClubRoute = computed(() =>
     ["/clubs", "/members", "/dues", "/schedule", "/board"].some((p) => route.path.startsWith(p)),
@@ -228,9 +229,10 @@ const handleScroll = () => {
 };
 
 const handleLogout = () => {
-    authStore.logout();
+    authStore.logout(); // authStore 내부에서 localStorage.removeItem('memberId') 등 처리 필요
     profileMenuOpen.value = false;
     mobileMenuOpen.value = false;
+    router.push('/'); // 로그아웃 후 홈으로 리다이렉트 (필요에 따라 수정)
 };
 
 onMounted(() => window.addEventListener("scroll", handleScroll));

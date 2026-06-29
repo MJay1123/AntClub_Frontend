@@ -19,23 +19,6 @@
             <a href="#" class="social-btn" title="Email">📧</a>
           </div>
         </div>
-
-        <!-- Links -->
-        <div class="footer-links-wrap">
-          <div class="footer-link-group" v-for="group in linkGroups" :key="group.title">
-            <h4 class="link-group-title">{{ group.title }}</h4>
-            <ul class="link-list">
-              <li v-for="link in group.links" :key="link.label">
-                <router-link v-if="link.to" :to="link.to" class="footer-link">
-                  {{ link.label }}
-                </router-link>
-                <a v-else :href="link.href" class="footer-link" target="_blank">
-                  {{ link.label }}
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
       </div>
 
       <!-- Divider -->
@@ -47,10 +30,6 @@
           © {{ currentYear }} AntClub. All rights reserved.
         </p>
         <div class="footer-meta">
-          <span class="api-status">
-            <span class="status-dot" :class="apiStatusClass" />
-            API {{ apiStatusText }}
-          </span>
           <span class="version">v1.0.0</span>
         </div>
       </div>
@@ -59,63 +38,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import api from '@/api/axios'
 
 const currentYear = new Date().getFullYear()
-const apiStatus = ref('checking') // 'online' | 'offline' | 'checking'
 
-const apiStatusClass = computed(() => ({
-  'dot-online': apiStatus.value === 'online',
-  'dot-offline': apiStatus.value === 'offline',
-  'dot-checking': apiStatus.value === 'checking'
-}))
-
-const apiStatusText = computed(() => ({
-  online: '연결됨',
-  offline: '연결 끊김',
-  checking: '확인 중...'
-}[apiStatus.value]))
-
-const checkApiHealth = async () => {
-  try {
-    await api.get('/api/health', { timeout: 3000 })
-    apiStatus.value = 'online'
-  } catch {
-    apiStatus.value = 'offline'
-  }
-}
-
-onMounted(() => checkApiHealth())
-
-const linkGroups = [
-  {
-    title: '서비스',
-    links: [
-      { label: '동아리 목록', to: '/clubs' },
-      { label: '동아리 등록', to: '/clubs/register' },
-      { label: '회원 관리', to: '/members' },
-      { label: '회비 관리', to: '/dues' }
-    ]
-  },
-  {
-    title: '기능',
-    links: [
-      { label: '일정 관리', to: '/schedule' },
-      { label: '게시판', to: '/board' },
-      { label: '내 프로필', to: '/my/profile' },
-      { label: '내 동아리', to: '/my/clubs' }
-    ]
-  },
-  {
-    title: '계정',
-    links: [
-      { label: '로그인', to: '/login' },
-      { label: '회원가입', to: '/register' },
-      { label: '설정', to: '/my/settings' }
-    ]
-  }
-]
 </script>
 
 <style scoped>

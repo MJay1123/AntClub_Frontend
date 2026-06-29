@@ -1,16 +1,21 @@
 <template>
-  <div id="app">
+  <header>
     <AppHeader />
-    <main class="main-content">
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </main>
+  </header>
+  
+  <main>
+    <router-view v-slot="{ Component }">
+      <transition name="page" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
+  </main>
+  
+  <footer>
     <AppFooter />
-  </div>
+  </footer>
 </template>
+
 
 <script setup>
 import { onMounted } from 'vue'

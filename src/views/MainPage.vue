@@ -13,8 +13,8 @@
           회원 관리부터 회비, 일정, 게시판까지 모두 지원합니다.
         </p>
         <div class="hero-buttons">
-          <router-link to="/register" class="btn btn-primary">시작하기</router-link>
-          <router-link to="/login" class="btn btn-outline">로그인</router-link>
+          <button class="btn btn-primary" @click="router.push('/register')">회원가입</button>
+          <button class="btn btn-outline" @click="router.push('/login')">로그인</button>
         </div>
       </div>
       <div class="hero-visual">
@@ -34,7 +34,7 @@
       </div>
 
       <div class="features-grid">
-        <div v-for="feature in features" :key="feature.id" class="feature-card" @click="navigateTo(feature.path)">
+        <div v-for="feature in features" :key="feature.id" class="feature-card">
           <div class="feature-icon" :style="{ backgroundColor: feature.color }">
             <span>{{ feature.icon }}</span>
           </div>
@@ -47,16 +47,7 @@
               </li>
             </ul>
           </div>
-          <div class="feature-arrow">→</div>
         </div>
-      </div>
-    </section>
-
-    <!-- Stats Section -->
-    <section class="stats">
-      <div class="stat-item" v-for="stat in stats" :key="stat.label">
-        <span class="stat-number">{{ stat.number }}</span>
-        <span class="stat-label">{{ stat.label }}</span>
       </div>
     </section>
 
@@ -64,19 +55,8 @@
     <section class="cta">
       <h2>지금 바로 시작하세요!</h2>
       <p>무료로 동아리를 등록하고 스마트한 관리를 경험해보세요.</p>
-      <router-link to="/register" class="btn btn-white">무료로 시작하기 🐜</router-link>
+      <button @click="router.push('/register')" class="btn btn-white">무료로 시작하기 🐜</button>
     </section>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <div class="footer-content">
-        <div class="footer-brand">
-          <span class="logo-icon">🐜</span>
-          <span class="logo-text">AntClub</span>
-        </div>
-        <p class="footer-copy">© 2024 AntClub. All rights reserved.</p>
-      </div>
-    </footer>
   </div>
 </template>
 
@@ -134,16 +114,6 @@ const features = ref([
   }
 ])
 
-const stats = ref([
-  { number: '500+', label: '등록된 동아리' },
-  { number: '10,000+', label: '활성 회원' },
-  { number: '50+', label: '연결된 학교' },
-  { number: '99.9%', label: '서비스 안정성' }
-])
-
-const navigateTo = (path) => {
-  router.push(path)
-}
 </script>
 
 <style scoped>
@@ -457,34 +427,6 @@ const navigateTo = (path) => {
   transform: translateY(-50%) translateX(4px);
 }
 
-/* ===== Stats ===== */
-.stats {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  padding: 60px 40px;
-  display: flex;
-  justify-content: center;
-  gap: 80px;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  text-align: center;
-  color: white;
-}
-
-.stat-number {
-  display: block;
-  font-size: 48px;
-  font-weight: 800;
-}
-
-.stat-label {
-  display: block;
-  font-size: 16px;
-  opacity: 0.85;
-  margin-top: 8px;
-}
-
 /* ===== CTA ===== */
 .cta {
   background: #1e293b;
@@ -503,36 +445,6 @@ const navigateTo = (path) => {
   font-size: 18px;
   color: #94a3b8;
   margin-bottom: 40px;
-}
-
-/* ===== Footer ===== */
-.footer {
-  background: #0f172a;
-  padding: 32px 40px;
-}
-
-.footer-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
-  margin: 0 auto;
-  flex-wrap: wrap;
-  gap: 16px;
-}
-
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 20px;
-  font-weight: 700;
-  color: white;
-}
-
-.footer-copy {
-  color: #64748b;
-  font-size: 14px;
 }
 
 /* ===== Responsive ===== */
