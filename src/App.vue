@@ -4,11 +4,15 @@
   </header>
   
   <main>
-    <router-view v-slot="{ Component }">
-      <transition name="page" mode="out-in">
-        <component :is="Component" />
-      </transition>
-    </router-view>
+    <LoadingModal v-if="isLoading" :is-loading="isLoading"/>
+    <ErrorModal v-else-if="isError" :is-error="isError" :error-message="errorMessage"/>
+    <div>
+      <router-view v-slot="{ Component }">
+        <transition name="page" mode="out-in">
+          <component :is="Component" />
+        </transition>
+      </router-view>
+    </div>
   </main>
   
   <footer>
@@ -22,8 +26,16 @@ import { onMounted } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import { useAuthStore } from '@/stores/auth'
+import { useUiStore } from './stores/ui'
+import { storeToRefs } from 'pinia'
+
+import LoadingModal from './components/LoadingModal.vue'
+import ErrorModal from './components/ErrorModal.vue'
 
 const authStore = useAuthStore()
+const uiStore = useUiStore()
+
+const { isLoading, isError, errorMessage } = storeToRefs(uiStore)
 
 onMounted(() => {
   if (authStore.isLoggedIn) {
