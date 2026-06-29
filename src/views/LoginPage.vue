@@ -9,7 +9,7 @@
             <span>AntClub</span>
           </router-link>
           <div class="left-text">
-            <h2>다시 돌아오신 것을</h2>
+            <h2>AntClub에 오신 것을</h2>
             <h2>환영합니다! 👋</h2>
             <p>로그인하여 동아리 활동을 이어가세요.</p>
           </div>
