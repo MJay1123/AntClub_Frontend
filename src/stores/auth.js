@@ -1,22 +1,10 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 
-export const useAuthStore = defineStore(
-    "auth",
-    () => {
-        const user = ref(null);
-        // 예: user = { id: 1, name: '홍길동', email: 'hong@email.com' }
-        const isLoggedIn = computed(() => !!user.value);
+export const useAuthStore = defineStore("auth", () => {
 
-        function login(userData) {
-            user.value = userData;
-        }
+    
+    return {
 
-        function logout() {
-            user.value = null;
-        }
-
-        return { user, isLoggedIn, login, logout };
-    },
-
-);
+    }
+});
