@@ -1,35 +1,47 @@
 <template>
   <div class="my-club-card" @click="$emit('click')">
 
-    <!-- 왼쪽: 로고 -->
-    <img
-      :src="club.logoImage || '/default-logo.png'"
-      class="club-logo"
-      alt="logo"
-    />
-
-    <!-- 중간: 정보 -->
-    <div class="card-info">
-      <div class="name-row">
-        <h3 class="club-name">{{ club.clubName }}</h3>
-        <span class="role-badge" :class="roleClass">{{ roleLabel }}</span>
-      </div>
-      <p class="club-desc">{{ club.description || '소개글 없음' }}</p>
-      <div class="meta">
-        <span v-if="club.location">📍 {{ club.location }}</span>
-        <span>👥 {{ club.memberCount ?? 0 }}명</span>
-        <span>📅 가입일 {{ formatDate(club.joinDate) }}</span>
-      </div>
+    <div class="card-banner" :style="club.bannerImage ? `background-image: url(${club.bannerImage})` : ''">
+      
+      <span class="status-badge" :class="statusClass">
+        {{ statusLabel }}
+      </span>
+    
     </div>
 
-    <!-- 오른쪽: 화살표 -->
-    <div class="arrow">›</div>
 
+    <div class="card-body">
+    
+      <img :src="club.logoImage || defaultLogo" class="club-logo" alt="logo"/>
+
+      <div class="card-info">
+        <div class="name-row">
+          <h3 class="club-name">{{ club.clubName }}</h3>
+          <span class="role-badge" :class="roleClass">{{ roleLabel }}</span>
+        </div>
+        <p class="club-desc">{{ club.description || '소개글 없음' }}</p>
+        <div class="meta">
+          <span v-if="club.location">📍 {{ club.location }}</span>
+          <span>👥 {{ club.memberCount ?? 0 }}명</span>
+          <span>📅 가입일 {{ formatDate(club.joinDate) }}</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <span class="join-type-badge" :class="joinTypeClass">
+          {{ joinTypeLabel }}
+        </span>
+      </div>
+
+      <div class="arrow">›</div>
+
+    </div>
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
+import defaultLogo from '@/assets/AntLogo.png'
 
 const props = defineProps({
   club: {
@@ -39,6 +51,30 @@ const props = defineProps({
 })
 
 defineEmits(['click'])
+
+const statusLabel = computed(() => ({
+  ACTIVE:    '활동중',
+  INACTIVE:  '비활동',
+  DISBANDED: '해체',
+}[props.club.status] ?? '-'))
+
+const statusClass = computed(() => ({
+  ACTIVE:    'badge-green',
+  INACTIVE:  'badge-gray',
+  DISBANDED: 'badge-red',
+}[props.club.status] ?? ''))
+
+const joinTypeLabel = computed(() => ({
+  FREE:     '자유가입',
+  APPROVAL: '승인가입',
+  CLOSED:   '가입불가',
+}[props.club.joinType] ?? '-'))
+
+const joinTypeClass = computed(() => ({
+  FREE:     'type-free',
+  APPROVAL: 'type-approval',
+  CLOSED:   'type-closed',
+}[props.club.joinType] ?? ''))
 
 const roleLabel = computed(() => ({
   PRESIDENT: '회장',
@@ -62,23 +98,69 @@ function formatDate(d) {
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 14px;
-  padding: 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  overflow: hidden;
   cursor: pointer;
-  transition: all 0.15s;
-}
-.my-club-card:hover {
-  border-color: #2563eb;
-  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.1);
+  transition: transform 0.15s, box-shadow 0.15s;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 로고 */
+.my-club-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.card-banner {
+  height: 100px;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+/* 상태 뱃지 */
+.status-badge {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+}
+.badge-green  { background: rgba(22, 163, 74, 0.85); }
+.badge-gray   { background: rgba(107, 114, 128, 0.85); }
+.badge-red    { background: rgba(220, 38, 38, 0.85); }
+
+.pending-badge {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.9);
+  color: #fff;
+}
+
+.card-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .club-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
   object-fit: cover;
   border: 2px solid #e5e7eb;
   flex-shrink: 0;

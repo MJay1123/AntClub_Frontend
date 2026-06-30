@@ -5,7 +5,7 @@
   
   <main>
     <LoadingModal v-if="isLoading" :is-loading="isLoading"/>
-    <ErrorModal v-else-if="isError" :is-error="isError" :error-message="errorMessage"/>
+    <ErrorModal v-else-if="isError" :is-error="isError" :error-message="errorMessage" @retry="alertDevelopment" @close="isError = false"/>
     <div>
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -49,6 +49,10 @@ const uiStore = useUiStore()
 
 const { isLoading, isError, errorMessage } = storeToRefs(uiStore)
 const { modal } = storeToRefs(uiStore)
+
+const alertDevelopment = () => {
+  alert('개발 중입니다...')
+}
 
 onMounted(() => {
   if (authStore.isLoggedIn) {

@@ -1,19 +1,14 @@
 <template>
   <div class="club-card" @click="$emit('click')">
 
-    <!-- 배너 이미지 -->
-    <div
-      class="card-banner"
-      :style="club.bannerImage ? `background-image: url(${club.bannerImage})` : ''"
-    >
-      <!-- 상태 뱃지 -->
+    <div class="card-banner" :style="club.bannerImage ? `background-image: url(${club.bannerImage})` : ''">
+      
       <span class="status-badge" :class="statusClass">
         {{ statusLabel }}
       </span>
 
     </div>
 
-    <!-- 카드 바디 -->
     <div class="card-body">
 
       <!-- 로고 + 이름 -->
@@ -143,7 +138,6 @@ const joinTypeClass = computed(() => ({
   color: #fff;
 }
 
-/* 바디 */
 .card-body {
   padding: 16px;
   display: flex;

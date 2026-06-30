@@ -23,3 +23,15 @@ export const clubApi = {
     getClub: (clubId) => api.get(`/club/${clubId}`)
 }
 
+export const clubMemberApi = {
+    getClubMembers: (clubId) => api.get(`/club-member/club/${clubId}`),
+    getClubMember: (clubId, memberId) => api.get(`/club-member/club/${clubId}/member/${memberId}`),
+    create: (request) => api.post('/club-member', request),
+    delete: (clubMemberId) => api.delete('/club-member')
+}
+
+export const semesterApi = {
+    getSemesters: (clubId) => api.get(`/semester/club/${clubId}`),
+    getSemester: (semesterId) => api.get(`/semester/${semesterId}`)
+}
+

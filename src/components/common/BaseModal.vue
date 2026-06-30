@@ -1,17 +1,9 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div
-        v-if="modelValue"
-        class="modal-backdrop"
-        @click.self="onBackdrop"
-      >
+      <div v-if="modelValue" class="modal-backdrop" @click.self="onBackdrop">
         <Transition name="slide">
-          <div
-            v-if="modelValue"
-            class="modal-container"
-            :class="`modal-${size}`"
-          >
+          <div v-if="modelValue" class="modal-container" :class="`modal-${size}`">
 
             <!-- 헤더 -->
             <div class="modal-header">

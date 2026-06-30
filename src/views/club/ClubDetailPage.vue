@@ -78,20 +78,23 @@
         <section class="card">
           <h2>임원 소개</h2>
           <div class="executive-list">
-            <div
-              v-for="exec in executives"
-              :key="exec.clubMemberId"
-              class="executive-item"
-            >
-              <img
-                :src="exec.profileImage || '/default-avatar.png'"
-                class="avatar"
-                alt="avatar"
-              />
+            <div v-if="president" class="executive-item">
+              <img :src="president.profileImage || defaultLogo" class="avatar" alt="avatar"/>
+              <div>
+                <p class="exec-name">{{ president.name }}</p>
+                <p class="exec-role">{{ roleLabel(president.clubRole) }}</p>
+                <p class="exec-info">🏫{{ president.schoolName }} - {{ president.majorName }}</p>
+                <p class="exec-info">🎂{{ formatDate(president.birthDate) }} || 📞{{ formatPhoneNumber(president.phoneNumber) }}</p>
+              </div>
+            </div>
+
+            <div v-for="exec in executives" :key="exec.clubMemberId" class="executive-item">
+              <img :src="exec.profileImage || defaultLogo" class="avatar" alt="avatar"/>
               <div>
                 <p class="exec-name">{{ exec.name }}</p>
                 <p class="exec-role">{{ roleLabel(exec.clubRole) }}</p>
-                <p class="exec-dept">{{ exec.department }}</p>
+                <p class="exec-info">🏫{{ exec.schoolName }} - {{ exec.majorName }}</p>
+                <p class="exec-info">🎂{{ formatDate(exec.birthDate) }} || 📞{{ formatPhoneNumber(exec.phoneNumber) }}</p>
               </div>
             </div>
             <p v-if="executives.length === 0" class="empty">임원 정보가 없습니다.</p>
@@ -106,37 +109,21 @@
         <!-- 가입 버튼 영역 -->
         <section class="card action-card">
           <!-- 이미 가입된 경우 -->
-          <template v-if="myMembership">
-            <div
-              v-if="myMembership.status === 'APPROVED'"
-              class="joined-badge"
-            >
-              ✅ {{ roleLabel(myMembership.clubRole) }}로 가입됨
+          <template v-if="clubMemberStore.clubMember">
+            <div v-if="clubMemberStore.clubMember.status === 'APPROVED'" class="joined-badge">
+              ✅ 회원 유형 : {{ roleLabel(clubMemberStore.clubMember.clubRole) }}
             </div>
-            <div
-              v-else-if="myMembership.status === 'PENDING'"
-              class="pending-badge"
-            >
+            <div v-else-if="clubMemberStore.clubMember.status === 'PENDING'" class="pending-badge">
               ⏳ 가입 승인 대기 중
             </div>
-            <button
-              v-if="myMembership.status === 'PENDING'"
-              class="btn btn-outline"
-              @click="cancelApply"
-            >
+            <button v-if="clubMemberStore.clubMember.status === 'PENDING'" class="btn btn-outline" @click="cancelApply">
               신청 취소
             </button>
           </template>
 
           <!-- 가입하지 않은 경우 -->
           <template v-else>
-            <p class="join-guide">
-              {{
-                club.joinType === 'FREE'
-                  ? '자유롭게 가입할 수 있습니다.'
-                  : '가입 신청 후 임원 승인이 필요합니다.'
-              }}
-            </p>
+            <p class="join-guide">{{ club.joinType === 'FREE' ? '자유롭게 가입할 수 있습니다.' : '가입 신청 후 임원 승인이 필요합니다.' }}</p>
             <textarea
               v-if="club.joinType === 'APPROVAL'"
               v-model="joinReason"
@@ -144,34 +131,29 @@
               class="textarea"
               rows="4"
             />
-            <button
-              class="btn btn-primary"
-              :disabled="club.status !== 'ACTIVE'"
-              @click="applyJoin"
-            >
+            <button class="btn btn-primary" :disabled="club.status !== 'ACTIVE'" @click="showModal=true">
               {{ club.status === 'ACTIVE' ? '가입 신청' : '가입 불가' }}
             </button>
           </template>
         </section>
-
+        
         <!-- 현재 학기 회비 -->
-        <section class="card" v-if="currentSemester">
-          <h2>현재 학기 회비</h2>
-          <div class="due-info">
+        <section class="card">
+          <h2>현재 학기</h2>
+          <div class="due-info" v-if="semesterStore.currentSemester">
             <p class="semester-label">
-              {{ currentSemester.year }}년 {{ termLabel(currentSemester.term) }}
+              {{ semesterStore.currentSemester.year }}년 {{ termLabel(semesterStore.currentSemester.term) }}
             </p>
             <p class="due-amount">
-              {{
-                currentSemester.due != null
-                  ? `${currentSemester.due.toLocaleString()}원`
-                  : '미정'
-              }}
+              {{ semesterStore.currentSemester.due != null ? `${semesterStore.currentSemester.due.toLocaleString()}원` : '미정' }}
             </p>
-            <p v-if="currentSemester.bankName" class="bank-info">
-              {{ currentSemester.bankName }} {{ currentSemester.accountNumber }}
-              ({{ currentSemester.accountHolder }})
+            <p v-if="semesterStore.currentSemester.bankName" class="bank-info">
+              {{ semesterStore.currentSemester.bankName }} {{ semesterStore.currentSemester.accountNumber }}
+              ({{ semesterStore.currentSemester.accountHolder }})
             </p>
+          </div>
+          <div v-else class="due-info">
+            <p class="semester-label">이번 학기가 설정되지 않았습니다.</p>
           </div>
         </section>
 
@@ -181,15 +163,15 @@
           <ul class="stat-list">
             <li>
               <span>전체 회원</span>
-              <strong>{{ stats.totalMembers }}명</strong>
+              <strong>{{ clubMemberStore.approvedMembers.length || '-' }}명</strong>
             </li>
             <li>
               <span>이번 학기 일정</span>
-              <strong>{{ stats.semesterSchedules }}개</strong>
+              <strong>개발 중입니다...</strong>
             </li>
             <li>
               <span>평균 참여율</span>
-              <strong>{{ stats.avgAttendance }}%</strong>
+              <strong>개발 중입니다...</strong>
             </li>
           </ul>
         </section>
@@ -198,11 +180,32 @@
     </div>
 
     <!-- ===== 가입 신청 확인 모달 ===== -->
-    <BaseModal v-if="showModal" @close="showModal = false">
+
+    <BaseModal v-model="showModal">
       <template #title>가입 신청</template>
-      <p>{{ club.clubName }}에 가입 신청하시겠습니까?</p>
+      
+      <div class="join-form">
+        <p style="margin-bottom: 12px;"><strong>[{{ club.clubName }}]</strong>에 가입 신청하시겠습니까?</p>
+        
+        <textarea
+          v-model="joinReason"
+          placeholder="가입 동기를 입력해주세요 (예: 재밌어보여서 지원했습니다.)"
+          class="textarea"
+          rows="3"
+          style="width: 100%; margin-bottom: 8px;"
+        ></textarea>
+        
+        <textarea
+          v-model="memo"
+          placeholder="메모를 입력해주세요 (예: 잘 부탁드립니다.)"
+          class="textarea"
+          rows="2"
+          style="width: 100%;"
+        ></textarea>
+      </div>
+
       <template #footer>
-        <button class="btn btn-outline" @click="showModal = false">취소</button>
+        <button class="btn btn-outline" @click="showModal=false">취소</button>
         <button class="btn btn-primary" @click="confirmApply">신청</button>
       </template>
     </BaseModal>
@@ -211,57 +214,75 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
-import { useAuthStore } from '@/stores/auth'
 import { useUiStore } from '@/stores/ui'
 import { useClubStore } from '@/stores/club'
-// import {
-//   fetchClubDetail,
-//   fetchClubExecutives,
-//   fetchClubStats,
-//   applyClubJoin,
-//   cancelClubJoin,
-// } from '@/api/club'
-// import { fetchCurrentSemester } from '@/api/semester'
+import { useClubMemberStore } from '@/stores/clubMember'
+import { useSemesterStore } from '@/stores/semester'
+import { memberApi } from '@/api/restApi'
+import { clubMemberApi } from '@/api/restApi'
+
+
 import BaseModal from '@/components/common/BaseModal.vue'
 import defaultLogo from '@/assets/AntLogo.png'
 
 const route     = useRoute()
-const router    = useRouter()
-const authStore = useAuthStore()
 const uiStore = useUiStore()
 const clubStore = useClubStore()
+const clubMemberStore = useClubMemberStore()
+const semesterStore = useSemesterStore()
 
-const clubId = computed(() => route.params.clubId)
 const { club } = storeToRefs(clubStore)
 
-// ── 데이터 ────────────────────────────────────────────
-const president        = ref(null)
-const executives       = ref([])
-const currentSemester  = ref(null)
-const myMembership     = ref(null)
-const stats            = ref({ totalMembers: 0, semesterSchedules: 0, avgAttendance: 0 })
+const president = ref(null)
+const executives = ref([])
 
 // ── 가입 신청 ─────────────────────────────────────────
 const joinReason  = ref('')
-const showModal   = ref(false)
+const memo = ref('')
+const showModal = ref(false)
 
-function applyJoin() {
-  showModal.value = true
+const confirmApply = async () => {
+  uiStore.isLoading = true
+  let isSuccess = false
+
+  try {
+    const memberId = localStorage.getItem('memberId')
+    const request = {
+      clubId: route.params.clubId,
+      memberId: memberId,
+      clubRole: "MEMBER",
+      status: "PENDING",
+      joinReason: joinReason.value,
+      memo: memo.value
+    }
+    await clubMemberApi.create(request)
+
+    showModal.value = false
+    joinReason.value = null
+    memo.value = null
+    isSuccess = true
+
+    await fetchData()
+  } catch (error) {
+    uiStore.isError.value = true
+    uiStore.errorMessage = '동아리 가입 신청에 실패하였습니다.'
+    console.log('error', error)
+  }
+  if(isSuccess){
+    uiStore.alert('신청 완료!', '동아리 가입이 신청되었습니다.')
+  }
 }
 
-async function confirmApply() {
-  await applyClubJoin(clubId.value, { joinReason: joinReason.value })
-  showModal.value = false
-  await load()
-}
-
-async function cancelApply() {
-  await cancelClubJoin(clubId.value)
-  await load()
+const cancelApply = async (clubMemberId) => {
+  const answer = uiStore.confirm('동아리 가입 신청 취소', '정말 가입 신청을 취소하시겠습니까?')
+  if(answer) {
+    await clubMemberApi.delete(clubMemberId)
+    await fetchData()
+  }
 }
 
 // ── 유틸 ──────────────────────────────────────────────
@@ -278,9 +299,10 @@ function roleLabel(v)     {
   return { PRESIDENT: '회장', EXECUTIVE: '임원', MEMBER: '회원' }[v] ?? v
 }
 function termLabel(v)     {
-  return { '1': '1학기', '2': '2학기', SUMMER: '여름학기', WINTER: '겨울학기' }[v] ?? v
+  return { 'FIRST': '1학기', 'SECOND': '2학기', SUMMER: '여름학기', WINTER: '겨울학기' }[v] ?? v
 }
-function formatDate(datetime)   {
+
+const formatDate = (datetime) => {
   const date = new Date(datetime)
 
     const year = date.getFullYear()
@@ -290,14 +312,57 @@ function formatDate(datetime)   {
     return `${year}년 ${month}월 ${day}일`
 }
 
+const formatPhoneNumber = (phone) => {
+  if (!phone) return '';
+
+  return phone.replace(
+    /(\d{3})(\d{4})(\d{4})/,
+    '$1-$2-$3'
+  );
+}
+
+
+const fetchExecutives = async () => {
+  const presidentMember = clubMemberStore.clubMembers.find(
+    member => member.clubRole === 'PRESIDENT'
+  )
+  if(presidentMember) {
+    const response = await memberApi.getMember(presidentMember.memberId)
+    president.value = {
+      ...presidentMember,
+      ...response.data
+    }
+  }
+  const executiveMembers = clubMemberStore.clubMembers.filter(
+    member => member.clubRole === 'EXECUTIVE'
+  )
+  executives.value = await Promise.all(
+    executiveMembers.map(async member => {
+      const response = await memberApi.getMember(member.memberId)
+      
+      return {
+        ...member,
+        ...response.data
+      }
+    })
+  )
+}
+
 // ── API 호출 ──────────────────────────────────────────
 const fetchData = async () => {
   uiStore.isLoading = true
 
   try {
     const clubId = route.params.clubId
+    const memberId = localStorage.getItem('memberId')
     await clubStore.fetchClub(clubId)
-    
+    await clubMemberStore.fetchClubMembers(clubId)
+    await clubMemberStore.fetchClubMember(clubId, memberId)
+
+    await fetchExecutives()
+
+    await semesterStore.fetchSemesters(clubId)
+
   } catch (error) {
     uiStore.isError = true
     uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
@@ -429,12 +494,13 @@ onMounted(async() => {
 .link  { color: #1a73e8; text-decoration: none; }
 
 /* 임원 */
-.executive-list { display: flex; gap: 16px; flex-wrap: wrap; }
+.executive-list { display: flex; gap: 16px; flex-wrap: wrap; flex-direction: column; }
 .executive-item { display: flex; gap: 10px; align-items: center; }
 .avatar { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .exec-name { font-weight: 600; font-size: 0.9rem; }
 .exec-role { font-size: 0.78rem; color: #1a73e8; }
-.exec-dept { font-size: 0.78rem; color: #888; }
+.exec-info { font-size: 0.78rem; color: #888; }
+
 
 /* 액션 카드 */
 .joined-badge  { color: #22c55e; font-weight: 600; margin-bottom: 8px; }
