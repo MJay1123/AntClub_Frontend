@@ -28,38 +28,47 @@ const props = defineProps({
 
 // 타입별 라벨/색상/아이콘 맵
 const MAP = {
-  // 동아리 상태
   status: {
     ACTIVE:    { label: '활동중',  style: 'green',  icon: '' },
     INACTIVE:  { label: '비활동',  style: 'gray',   icon: '' },
     DISBANDED: { label: '해체',    style: 'red',    icon: '' },
   },
-  // 동아리 내 역할
   role: {
     PRESIDENT: { label: '회장', style: 'yellow', icon: '👑' },
     EXECUTIVE: { label: '임원', style: 'blue',   icon: '⭐' },
     MEMBER:    { label: '회원', style: 'gray',   icon: '' },
   },
-  // 가입 방식
   joinType: {
     FREE:     { label: '자유가입', style: 'blue',   icon: '' },
     APPROVAL: { label: '승인가입', style: 'yellow', icon: '' },
     CLOSED:   { label: '가입불가', style: 'red',    icon: '' },
   },
-  // 회비 납부 상태
   paymentStatus: {
     PAID:     { label: '완납',     style: 'green',  icon: '✓' },
     PARTIAL:  { label: '부분납부', style: 'yellow', icon: '△' },
     UNPAID:   { label: '미납',     style: 'red',    icon: '✕' },
     EXEMPTED: { label: '면제',     style: 'gray',   icon: '-' },
   },
-  // 회원 가입 상태
   memberStatus: {
     PENDING:   { label: '대기중', style: 'yellow', icon: '⏳' },
     APPROVED:  { label: '승인됨', style: 'green',  icon: '✓' },
     REJECTED:  { label: '거절됨', style: 'red',    icon: '✕' },
     WITHDRAWN: { label: '탈퇴',   style: 'gray',   icon: '' },
     EXPELLED:  { label: '강퇴',   style: 'red',    icon: '' },
+  },
+  scheduleType: {
+    REGULAR:     { label: '정기모임', style: 'blue',   icon: '' },
+    SPECIAL:     { label: '특별활동', style: 'purple', icon: '' },
+    COMPETITION: { label: '대회',    style: 'yellow', icon: '' },
+    WORKSHOP:    { label: '워크숍',  style: 'green',  icon: '' },
+    PARTY:       { label: '회식',    style: 'pink',   icon: '' },
+    ETC:         { label: '기타',    style: 'gray',   icon: '' },
+  },
+  scheduleStatus: {
+    SCHEDULED:  { label: '예정',   style: 'blue',  icon: '' },
+    ONGOING:    { label: '진행중', style: 'green', icon: '' },
+    COMPLETED:  { label: '완료',   style: 'gray',  icon: '' },
+    CANCELLED:  { label: '취소',   style: 'red',   icon: '' },
   },
 }
 
@@ -91,4 +100,6 @@ const sizeClass = computed(() => `badge-${props.size}`)
 .badge-yellow { background: #fef3c7; color: #d97706; }
 .badge-red    { background: #fee2e2; color: #dc2626; }
 .badge-gray   { background: #f3f4f6; color: #6b7280; }
+.badge-purple { background: #ede9fe; color: #6d28d9; }
+.badge-pink   { background: #fce7f3; color: #9d174d; }
 </style>

@@ -11,6 +11,18 @@
         목록으로
       </button>
 
+      <button 
+        v-if="myClubMember?.clubRole === 'PRESIDENT' || myClubMember?.clubRole === 'EXECUTIVE'" 
+        class="btn-admin" 
+        @click="router.push(`/club/${club.clubId}/manage`)"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="admin-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+        동아리 관리
+      </button>
+
       <div class="banner-overlay">
         <img :src="club.logoImage || defaultLogo" class="club-logo" alt="logo"/>
         <div class="banner-info">
@@ -28,100 +40,125 @@
 
     </div>
 
+    <div class="tabs-container">
+      <div class="tabs">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id" 
+          class="tab-item"
+          :class="{ active: currentTab === tab.id }"
+          @click="currentTab = tab.id"
+        >
+          {{ tab.name }}
+        </button>
+      </div>
+    </div>
+
+
+
     <div class="content-wrap">
 
-      <!-- ===== 왼쪽 메인 ===== -->
       <main class="main-content">
 
-        <!-- 동아리 소개 -->
-        <section class="card">
-          <h2>동아리 소개</h2>
-          <p class="description">{{ club.description || '등록된 소개글이 없습니다.' }}</p>
-        </section>
+        <div v-if="currentTab === 'info'" class="tab-content">
+          <section class="card">
+            <h2>동아리 소개</h2>
+            <p class="description">{{ club.description || '등록된 소개글이 없습니다.' }}</p>
+          </section>
 
-        <!-- 기본 정보 -->
-        <section class="card">
-          <h2>기본 정보</h2>
-          <ul class="info-list">
-            <li>
-              <span class="label">📍 활동 장소</span>
-              <span>{{ club.location || '-' }}</span>
-            </li>
-            <li>
-              <span class="label">👥 최대 인원</span>
-              <span>{{ club.maxMembers ? `${club.maxMembers}명` : '제한 없음' }}</span>
-            </li>
-            <li>
-              <span class="label">📧 연락처</span>
-              <span>{{ club.contactEmail || '-' }}</span>
-            </li>
-            <li>
-              <span class="label">🔗 SNS</span>
-              <a
-                v-if="club.snsLink"
-                :href="club.snsLink"
-                target="_blank"
-                class="link"
-              >
-                {{ club.snsLink }}
-              </a>
-              <span v-else>-</span>
-            </li>
-            <li>
-              <span class="label">📅 개설일</span>
-              <span>{{ formatDate(club.createdAt) }}</span>
-            </li>
-          </ul>
-        </section>
+          <section class="card">
+            <h2>기본 정보</h2>
+            <ul class="info-list">
+              <li>
+                <span class="label">📍 활동 장소</span>
+                <span>{{ club.location || '-' }}</span>
+              </li>
+              <li>
+                <span class="label">👥 최대 인원</span>
+                <span>{{ club.maxMembers ? `${club.maxMembers}명` : '제한 없음' }}</span>
+              </li>
+              <li>
+                <span class="label">📧 연락처</span>
+                <span>{{ club.contactEmail || '-' }}</span>
+              </li>
+              <li>
+                <span class="label">🔗 SNS</span>
+                <a v-if="club.snsLink" :href="club.snsLink" target="_blank" class="link">
+                  {{ club.snsLink }}
+                </a>
+                <span v-else>-</span>
+              </li>
+              <li>
+                <span class="label">📅 개설일</span>
+                <span>{{ formatDate(club.createdAt) }}</span>
+              </li>
+            </ul>
+          </section>
 
-        <!-- 임원 소개 -->
-        <section class="card">
-          <h2>임원 소개</h2>
-          <div class="executive-list">
-            <div v-if="president" class="executive-item">
-              <img :src="president.profileImage || defaultLogo" class="avatar" alt="avatar"/>
-              <div>
-                <p class="exec-name">{{ president.name }}</p>
-                <p class="exec-role">{{ roleLabel(president.clubRole) }}</p>
-                <p class="exec-info">🏫{{ president.schoolName }} - {{ president.majorName }}</p>
-                <p class="exec-info">🎂{{ formatDate(president.birthDate) }} || 📞{{ formatPhoneNumber(president.phoneNumber) }}</p>
+          <section class="card">
+            <h2>임원 소개</h2>
+            <div class="executive-list">
+              <div v-if="president" class="executive-item">
+                <img :src="president.profileImage || defaultLogo" class="avatar" alt="avatar"/>
+                <div>
+                  <p class="exec-name">{{ president.name }}</p>
+                  <p class="exec-role">{{ roleLabel(president.clubRole) }}</p>
+                  <p class="exec-info">🏫{{ president.schoolName }} - {{ president.majorName }}</p>
+                  <p class="exec-info">🎂{{ formatDate(president.birthDate) }} || 📞{{ formatPhoneNumber(president.phoneNumber) }}</p>
+                </div>
               </div>
-            </div>
 
-            <div v-for="exec in executives" :key="exec.clubMemberId" class="executive-item">
-              <img :src="exec.profileImage || defaultLogo" class="avatar" alt="avatar"/>
-              <div>
-                <p class="exec-name">{{ exec.name }}</p>
-                <p class="exec-role">{{ roleLabel(exec.clubRole) }}</p>
-                <p class="exec-info">🏫{{ exec.schoolName }} - {{ exec.majorName }}</p>
-                <p class="exec-info">🎂{{ formatDate(exec.birthDate) }} || 📞{{ formatPhoneNumber(exec.phoneNumber) }}</p>
+              <div v-for="exec in executives" :key="exec.clubMemberId" class="executive-item">
+                <img :src="exec.profileImage || defaultLogo" class="avatar" alt="avatar"/>
+                <div>
+                  <p class="exec-name">{{ exec.name }}</p>
+                  <p class="exec-role">{{ roleLabel(exec.clubRole) }}</p>
+                  <p class="exec-info">🏫{{ exec.schoolName }} - {{ exec.majorName }}</p>
+                  <p class="exec-info">🎂{{ formatDate(exec.birthDate) }} || 📞{{ formatPhoneNumber(exec.phoneNumber) }}</p>
+                </div>
               </div>
+              <p v-if="executives.length === 0 && !president" class="empty">임원 정보가 없습니다.</p>
             </div>
-            <p v-if="executives.length === 0" class="empty">임원 정보가 없습니다.</p>
-          </div>
-        </section>
+          </section>
+        </div>
+
+        <div v-else-if="currentTab === 'schedule'" class="tab-content">
+          <section class="card">
+            <h2>동아리 일정</h2>
+            <p class="empty">등록된 일정이 없습니다. (개발 예정)</p>
+          </section>
+        </div>
+
+        <div v-else-if="currentTab === 'board'" class="tab-content">
+          <section class="card">
+            <h2>동아리 게시판</h2>
+            <p class="empty">등록된 게시글이 없습니다. (개발 예정)</p>
+          </section>
+        </div>
+
+        <div v-else-if="currentTab === 'my-record'" class="tab-content">
+          <section class="card">
+            <h2>내 참여 기록</h2>
+            <p class="empty">참여 기록이 없습니다. (개발 예정)</p>
+          </section>
+        </div>
 
       </main>
 
-      <!-- ===== 오른쪽 사이드바 ===== -->
       <aside class="sidebar">
-
-        <!-- 가입 버튼 영역 -->
         <section class="card action-card">
-          <!-- 이미 가입된 경우 -->
-          <template v-if="clubMemberStore.clubMember">
-            <div v-if="clubMemberStore.clubMember.status === 'APPROVED'" class="joined-badge">
-              ✅ 회원 유형 : {{ roleLabel(clubMemberStore.clubMember.clubRole) }}
+          <template v-if="myClubMember">
+            <div v-if="myClubMember.status === 'APPROVED'" class="joined-badge">
+              ✅ 회원 유형 : {{ roleLabel(myClubMember.clubRole) }}
             </div>
-            <div v-else-if="clubMemberStore.clubMember.status === 'PENDING'" class="pending-badge">
+            <div v-else-if="myClubMember.status === 'PENDING'" class="pending-badge">
               ⏳ 가입 승인 대기 중
             </div>
-            <button v-if="clubMemberStore.clubMember.status === 'PENDING'" class="btn btn-outline" @click="cancelApply">
+            <button v-if="myClubMember.status === 'PENDING'" class="btn btn-outline" @click="cancelApply">
               신청 취소
             </button>
           </template>
 
-          <!-- 가입하지 않은 경우 -->
           <template v-else>
             <p class="join-guide">{{ club.joinType === 'FREE' ? '자유롭게 가입할 수 있습니다.' : '가입 신청 후 임원 승인이 필요합니다.' }}</p>
             <textarea
@@ -137,19 +174,18 @@
           </template>
         </section>
         
-        <!-- 현재 학기 회비 -->
         <section class="card">
           <h2>현재 학기</h2>
-          <div class="due-info" v-if="semesterStore.currentSemester">
+          <div class="due-info" v-if="currentSemester">
             <p class="semester-label">
-              {{ semesterStore.currentSemester.year }}년 {{ termLabel(semesterStore.currentSemester.term) }}
+              {{ currentSemester.year }}년 {{ termLabel(currentSemester.term) }}
             </p>
             <p class="due-amount">
-              {{ semesterStore.currentSemester.due != null ? `${semesterStore.currentSemester.due.toLocaleString()}원` : '미정' }}
+              {{ currentSemester.due != null ? `${currentSemester.due.toLocaleString()}원` : '미정' }}
             </p>
-            <p v-if="semesterStore.currentSemester.bankName" class="bank-info">
-              {{ semesterStore.currentSemester.bankName }} {{ semesterStore.currentSemester.accountNumber }}
-              ({{ semesterStore.currentSemester.accountHolder }})
+            <p v-if="currentSemester.bankName" class="bank-info">
+              {{ currentSemester.bankName }} {{ currentSemester.accountNumber }}
+              ({{ currentSemester.accountHolder }})
             </p>
           </div>
           <div v-else class="due-info">
@@ -157,13 +193,12 @@
           </div>
         </section>
 
-        <!-- 통계 -->
         <section class="card">
           <h2>동아리 현황</h2>
           <ul class="stat-list">
             <li>
               <span>전체 회원</span>
-              <strong>{{ clubMemberStore.approvedMembers.length || '-' }}명</strong>
+              <strong>{{ approvedMembers.length || '-' }}명</strong>
             </li>
             <li>
               <span>이번 학기 일정</span>
@@ -175,11 +210,9 @@
             </li>
           </ul>
         </section>
-
       </aside>
-    </div>
 
-    <!-- ===== 가입 신청 확인 모달 ===== -->
+    </div>
 
     <BaseModal v-model="showModal">
       <template #title>가입 신청</template>
@@ -215,7 +248,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import { useUiStore } from '@/stores/ui'
@@ -230,17 +263,27 @@ import BaseModal from '@/components/common/BaseModal.vue'
 import defaultLogo from '@/assets/AntLogo.png'
 
 const route     = useRoute()
+const router    = useRouter()
 const uiStore = useUiStore()
 const clubStore = useClubStore()
 const clubMemberStore = useClubMemberStore()
 const semesterStore = useSemesterStore()
 
 const { club } = storeToRefs(clubStore)
+const { approvedMembers, presidentMember, executiveMembers, myClubMember } = storeToRefs(clubMemberStore)
+const { currentSemester } = storeToRefs(semesterStore)
 
 const president = ref(null)
 const executives = ref([])
 
-// ── 가입 신청 ─────────────────────────────────────────
+const currentTab = ref('info')
+const tabs = [
+  { id: 'info', name: '동아리 정보' },
+  { id: 'schedule', name: '동아리 일정' },
+  { id: 'board', name: '동아리 게시판' },
+  { id: 'my-record', name: '내 참여 기록' },
+]
+
 const joinReason  = ref('')
 const memo = ref('')
 const showModal = ref(false)
@@ -323,21 +366,14 @@ const formatPhoneNumber = (phone) => {
 
 
 const fetchExecutives = async () => {
-  const presidentMember = clubMemberStore.clubMembers.find(
-    member => member.clubRole === 'PRESIDENT'
-  )
-  if(presidentMember) {
-    const response = await memberApi.getMember(presidentMember.memberId)
-    president.value = {
-      ...presidentMember,
-      ...response.data
-    }
+  const response = await memberApi.getMember(presidentMember.value.memberId)
+  president.value = {
+    ...presidentMember,
+    ...response.data
   }
-  const executiveMembers = clubMemberStore.clubMembers.filter(
-    member => member.clubRole === 'EXECUTIVE'
-  )
+  console.log('president', president)
   executives.value = await Promise.all(
-    executiveMembers.map(async member => {
+    executiveMembers.value.map(async member => {
       const response = await memberApi.getMember(member.memberId)
       
       return {
@@ -346,6 +382,7 @@ const fetchExecutives = async () => {
       }
     })
   )
+  console.log('executives', executives)
 }
 
 // ── API 호출 ──────────────────────────────────────────
@@ -354,10 +391,9 @@ const fetchData = async () => {
 
   try {
     const clubId = route.params.clubId
-    const memberId = localStorage.getItem('memberId')
     await clubStore.fetchClub(clubId)
     await clubMemberStore.fetchClubMembers(clubId)
-    await clubMemberStore.fetchClubMember(clubId, memberId)
+    await clubMemberStore.fetchMe(clubId)
 
     await fetchExecutives()
 
@@ -433,11 +469,91 @@ onMounted(async() => {
   height: 16px;
 }
 
-/* 호버 효과: 배경이 살짝 진해지고 왼쪽으로 2px 이동 */
 .btn-back:hover {
   background-color: rgba(0, 0, 0, 0.6);
   border-color: rgba(255, 255, 255, 0.4);
-  transform: translateX(-2px);
+}
+
+.btn-admin {
+  position: absolute;
+  top: 16px;
+  right: 16px; /* 우측 상단 고정 */
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-admin:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.admin-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.tabs-container {
+  width: 100%;
+  max-width: 1200px; /* 사이트 본문 폭 맞춤 */
+  margin: 24px auto 0;
+  padding: 0 16px;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+
+/* 개별 탭 버튼 */
+.tab-item {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #718096;
+  background: none;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.tab-item:hover {
+  color: #3182ce;
+}
+
+/* 활성화된 탭 밑줄 강조 */
+.tab-item.active {
+  color: #3182ce;
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; /* 부모 컨테이너 보더와 겹치게 처리 */
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #3182ce;
+}
+
+/* 빈 상태 문구 스타일 */
+.empty {
+  text-align: center;
+  color: #a0aec0;
+  padding: 40px 0;
 }
 
 .club-logo {

@@ -1,22 +1,20 @@
 <template>
-  <div class="manage-club-page">
+  <div class="manage-club-page" v-if="club">
 
-    <!-- ===== 상단 클럽 헤더 ===== -->
-    <div class="club-header" v-if="club">
-      <img :src="club.logoImage || '/default-logo.png'" class="logo" alt="logo" />
+    <div class="club-header">
+      <img :src="club.logoImage || defaultLogo" class="logo" alt="logo" />
       <div>
         <h1>{{ club.clubName }}</h1>
-        <p class="my-role">{{ roleLabel(myRole) }}</p>
+        <p class="my-role">{{ roleLabel(clubMember?.clubRole) }}</p>
       </div>
-      <button class="btn-back" @click="router.push('/clubs')">← 목록으로</button>
+      <button class="btn-back" @click="router.push(`/club/${club.clubId}`)">← 뒤로 가기</button>
     </div>
 
-    <!-- ===== 탭 네비게이션 ===== -->
     <nav class="tab-nav">
       <router-link
         v-for="tab in tabs"
         :key="tab.name"
-        :to="{ name: tab.name, params: { clubId } }"
+        :to="{ name: tab.name, params: { clubId: club.clubId } }"
         class="tab-item"
         active-class="tab-active"
       >
@@ -25,31 +23,35 @@
       </router-link>
     </nav>
 
-    <!-- ===== 탭 콘텐츠 ===== -->
     <div class="tab-content">
       <router-view
         :club="club"
-        :my-role="myRole"
-        :my-club-member-id="myClubMemberId"
-      />
+        :my-role="clubMember?.clubRole"
+        :my-club-member-id="clubMember?.clubMemberId"
+      >
+    </router-view>
     </div>
 
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { fetchClubDetail } from '@/api/club'
+import { storeToRefs } from 'pinia'
+
+import { useClubStore } from '@/stores/club'
+import { useClubMemberStore } from '@/stores/clubMember'
+import defaultLogo from '@/assets/AntLogo.png'
 
 const route  = useRoute()
 const router = useRouter()
 
-const clubId = computed(() => route.params.clubId)
+const clubStore = useClubStore()
+const clubMemberStore = useClubMemberStore()
 
-const club            = ref(null)
-const myRole          = ref('MEMBER')
-const myClubMemberId  = ref(null)
+const { club } = storeToRefs(clubStore)
+const { clubMembers, clubMember } = storeToRefs(clubMemberStore)
 
 const tabs = [
   { name: 'ClubMember',   label: '회원 관리',  icon: '👥' },
@@ -57,18 +59,22 @@ const tabs = [
   { name: 'ClubDue',      label: '회비 관리',  icon: '💰' },
 ]
 
-async function load() {
-  const res         = await fetchClubDetail(clubId.value)
-  club.value        = res.data
-  myRole.value      = res.data.myMembership?.clubRole     ?? 'MEMBER'
-  myClubMemberId.value = res.data.myMembership?.clubMemberId ?? null
+const fetchData = async () => {
+  const clubId = route.params.clubId
+  const memberId = localStorage.getItem('memberId')
+  if(!club.value) await clubStore.fetchClub(clubId)
+  if(!clubMember.value) await clubMemberStore.fetchClubMember(clubId, memberId)
+  if(!clubMembers.value) await clubMemberStore.fetchClubMembers(clubId)
 }
 
 function roleLabel(v) {
   return { PRESIDENT: '회장', EXECUTIVE: '임원', MEMBER: '회원' }[v] ?? v
 }
 
-onMounted(load)
+onMounted(async () => {
+  await fetchData()
+})
+
 </script>
 
 <style scoped>

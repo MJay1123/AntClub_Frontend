@@ -262,16 +262,6 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute }                        from 'vue-router'
-import {
-  fetchSemesters,
-  createSemester,
-  updateSemester,
-} from '@/api/semester'
-import {
-  fetchDuePayments,
-  updateDuePayment,
-  sendDueReminder,
-} from '@/api/duePayment'
 import BasePagination from '@/components/common/BasePagination.vue'
 import BaseModal      from '@/components/common/BaseModal.vue'
 

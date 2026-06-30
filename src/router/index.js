@@ -3,6 +3,12 @@ import { createRouter, createWebHistory } from "vue-router";
 import MainPage from "@/views/MainPage.vue";
 import LoginPage from "@/views/LoginPage.vue";
 import RegisterPage from "@/views/RegisterPage.vue";
+import ClubListPage from "@/views/club/ClubListPage.vue";
+import ClubDetailPage from "@/views/club/ClubDetailPage.vue";
+import ManageClubPage from "@/views/club/ManageClubPage.vue";
+import ClubMemberPage from "@/views/club/ClubMemberPage.vue";
+import ClubSchedulePage from "@/views/club/ClubSchedulePage.vue";
+import ClubDuePage from "@/views/club/ClubDuePage.vue";
 
 const routes = [
   {
@@ -29,35 +35,40 @@ const routes = [
   {
     path: '/club',
     name: 'ClubList',
-    component: () => import('@/views/club/ClubListPage.vue'),
+    component: ClubListPage
   },
   {
     path: '/club/:clubId',
     name: 'ClubDetail',
-    component: () => import('@/views/club/ClubDetailPage.vue'),
+    component: ClubDetailPage
   },
   {
     path: '/club/:clubId/manage',
-    component: () => import('@/views/club/ManageClubPage.vue'),
+    component: ManageClubPage,
     children: [
       {
         path: '',
-        redirect: 'members',
+        redirect: to => ({
+          name: 'ClubMember',
+          params: {
+            clubId: to.params.clubId
+          }
+        })
       },
       {
         path: 'members',
         name: 'ClubMember',
-        component: () => import('@/views/club/ClubMemberPage.vue'),
+        component: ClubMemberPage
       },
       {
         path: 'schedules',
         name: 'ClubSchedule',
-        component: () => import('@/views/club/ClubSchedulePage.vue'),
+        component: ClubSchedulePage
       },
       {
         path: 'dues',
         name: 'ClubDue',
-        component: () => import('@/views/club/ClubDuePage.vue'),
+        component: ClubDuePage
       },
     ],
   },

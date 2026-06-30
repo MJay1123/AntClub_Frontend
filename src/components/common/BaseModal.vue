@@ -39,7 +39,7 @@ defineProps({
   closeOnBackdrop: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'close'])
 
 function onBackdrop(closeOnBackdrop) {
   if (closeOnBackdrop) emit('update:modelValue', false)
