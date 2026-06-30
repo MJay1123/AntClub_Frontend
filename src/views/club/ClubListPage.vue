@@ -11,7 +11,7 @@
         <section class="section-explore">
             <div class="section-title">
                 <h2>전체 동아리</h2>
-                <span class="count">{{ totalClubCount }}개</span>
+                <span class="count">{{ clubStore.allClubs.length }}개</span>
             </div>
 
             <!-- 검색 & 필터 -->
@@ -37,15 +37,9 @@
                 </select>
             </div>
 
-            <!-- 전체 동아리 카드 목록 -->
-            <div v-if="loadingAll" class="loading-wrap">
-                <span>불러오는 중...</span>
-            </div>
-
-            <div v-else class="club-grid">
-                <!-- <ClubCard v-for="club in allClubs" :key="club.clubId" :club="club" :is-joined="isJoined(club.clubId)"
-                    @click="goToClub(club)" /> -->
-                <div v-if="allClubs.length === 0" class="empty">
+            <div class="club-grid">
+                <ClubCard v-for="club in clubStore.allClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
+                <div v-if="clubStore.allClubs.length === 0" class="empty">
                     검색 결과가 없습니다.
                 </div>
             </div>
@@ -57,7 +51,7 @@
         <section class="section-my">
             <div class="section-title">
                 <h2>내 동아리</h2>
-                <span class="count">{{ myClubs.length }}개</span>
+                <span class="count">{{ clubStore.myClubs.length }}개</span>
             </div>
 
             <div v-if="loadingMy" class="loading-wrap">
@@ -67,23 +61,21 @@
             <div v-else class="my-club-list">
 
                 <!-- 가입 대기 중인 동아리 -->
-                <div v-if="pendingClubs.length" class="pending-section">
+                <div v-if="clubStore.pendingClubs.length" class="pending-section">
                     <h3>가입 대기 중 <span class="badge">{{ pendingClubs.length }}</span></h3>
                     <div class="club-grid">
-                        <ClubCard v-for="item in pendingClubs" :key="item.clubId" :club="item" :is-joined="false"
-                            :is-pending="true" @click="goToClub(item)" />
+                        <ClubCard v-for="club in clubStore.pendingClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
                     </div>
                 </div>
 
                 <!-- 가입된 동아리 -->
                 <div class="joined-section">
                     <h3>가입된 동아리</h3>
-                    <div v-if="joinedClubs.length === 0" class="empty">
+                    <div v-if="clubStore.joinedClubs.length === 0" class="empty">
                         가입된 동아리가 없습니다.
                     </div>
                     <div class="club-grid">
-                        <MyClubCard v-for="item in joinedClubs" :key="item.clubId" :club="item"
-                            @click="goToManage(item.clubId)" />
+                        <MyClubCard v-for="club in clubStore.joinedClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
                     </div>
                 </div>
             </div>
@@ -93,24 +85,18 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { useClubStore } from '@/stores/club'
-// import ClubCard from '@/components/club/ClubCard.vue'
-// import MyClubCard from '@/components/club/MyClubCard.vue'
-// import BasePagination from '@/components/common/BasePagination.vue'
+import ClubCard from '@/components/club/ClubCard.vue'
+import MyClubCard from '@/components/club/MyClubCard.vue'
+import BasePagination from '@/components/common/BasePagination.vue'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const clubStore = useClubStore()
 
-// ── 전체 동아리 ──────────────────────────────────────
-const allClubs = ref([])
-const totalClubCount = ref(0)
 const allPage = ref(1)
 const allTotalPages = ref(1)
-const loadingAll = ref(false)
 
 // 필터
 const searchKeyword = ref('')
@@ -119,81 +105,37 @@ const filterStatus = ref('')
 const filterJoinType = ref('')
 
 // ── 내 동아리 ─────────────────────────────────────────
-const myClubs = ref([])   // {club, clubMember} 형태
 const loadingMy = ref(false)
-
-// ── 계산 ──────────────────────────────────────────────
-const joinedClubs = computed(() =>
-    myClubs.value.filter(m => m.clubMember.status === 'APPROVED')
-)
-const pendingClubs = computed(() =>
-    myClubs.value.filter(m => m.clubMember.status === 'PENDING')
-)
-
-const joinedClubIds = computed(() =>
-    new Set(joinedClubs.value.map(m => m.club.clubId))
-)
-
-function isJoined(clubId) {
-    return joinedClubIds.value.has(clubId)
-}
-
-// ── API 호출 ──────────────────────────────────────────
-async function loadAllClubs() {
-    loadingAll.value = true
-    try {
-        const res = await clubStore.fetchAllClubs()
-        allClubs.value = res.data
-        totalClubCount.value = res.data.totalElements
-        allTotalPages.value = res.data.totalPages
-    } finally {
-        loadingAll.value = false
-    }
-}
-
-async function loadMyClubs() {
-    loadingMy.value = true
-    try {
-        const res = await clubStore.fetchMyClubs()
-        myClubs.value = res.data
-    } finally {
-        loadingMy.value = false
-    }
-}
 
 // ── 이벤트 핸들러 ─────────────────────────────────────
 let searchTimer = null
-function onSearch() {
+const onSearch = async() => {
     clearTimeout(searchTimer)
-    searchTimer = setTimeout(() => {
+    searchTimer = setTimeout(async () => {
         allPage.value = 1
-        loadAllClubs()
+        await clubStore.fetchAllClubs()
     }, 400)
 }
 
-function onFilter() {
+const onFilter = async() => {
     allPage.value = 1
-    loadAllClubs()
+    await clubStore.fetchAllClubs()
 }
 
-function onAllPageChange(page) {
+const onAllPageChange = async(page) => {
     allPage.value = page
-    loadAllClubs()
+    await clubStore.fetchAllClubs()
 }
 
 // ── 페이지 이동 ────────────────────────────────────────
-function goToClub(club) {
-    router.push({ name: 'ClubDetail', params: { clubId: club.clubId } })
-}
-
-function goToManage(clubId) {
-    router.push({ name: 'ClubMember', params: { clubId } })
+function goToClubDetail(clubId) {
+    router.push({ name: 'ClubDetail', params: { clubId: clubId } })
 }
 
 // ── 초기화 ────────────────────────────────────────────
-onMounted(() => {
-    loadAllClubs()
-    loadMyClubs()
+onMounted(async () => {
+    await clubStore.fetchAllClubs()
+    await clubStore.fetchMyClubs()
 })
 </script>
 

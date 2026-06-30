@@ -1,17 +1,18 @@
-<template>
+<template>  
   <div class="club-detail-page" v-if="club">
 
     <!-- ===== 배너 ===== -->
-    <div
-      class="banner"
-      :style="club.bannerImage ? `background-image:url(${club.bannerImage})` : ''"
-    >
+    <div class="banner" :style="club.bannerImage ? `background-image:url(${club.bannerImage})` : ''">
+
+      <button class="btn-back" @click="$router.back()">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="back-icon">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+        목록으로
+      </button>
+
       <div class="banner-overlay">
-        <img
-          :src="club.logoImage || '/default-logo.png'"
-          class="club-logo"
-          alt="logo"
-        />
+        <img :src="club.logoImage || defaultLogo" class="club-logo" alt="logo"/>
         <div class="banner-info">
           <div class="badges">
             <span class="badge category">{{ club.category }}</span>
@@ -24,6 +25,7 @@
           <p class="sub">{{ club.location }}</p>
         </div>
       </div>
+
     </div>
 
     <div class="content-wrap">
@@ -61,7 +63,7 @@
                 target="_blank"
                 class="link"
               >
-                바로가기
+                {{ club.snsLink }}
               </a>
               <span v-else>-</span>
             </li>
@@ -206,35 +208,38 @@
     </BaseModal>
 
   </div>
-
-  <!-- 로딩 -->
-  <div v-else class="loading-wrap">
-    <span>불러오는 중...</span>
-  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { storeToRefs } from 'pinia'
+
 import { useAuthStore } from '@/stores/auth'
-import {
-  fetchClubDetail,
-  fetchClubExecutives,
-  fetchClubStats,
-  applyClubJoin,
-  cancelClubJoin,
-} from '@/api/club'
-import { fetchCurrentSemester } from '@/api/semester'
+import { useUiStore } from '@/stores/ui'
+import { useClubStore } from '@/stores/club'
+// import {
+//   fetchClubDetail,
+//   fetchClubExecutives,
+//   fetchClubStats,
+//   applyClubJoin,
+//   cancelClubJoin,
+// } from '@/api/club'
+// import { fetchCurrentSemester } from '@/api/semester'
 import BaseModal from '@/components/common/BaseModal.vue'
+import defaultLogo from '@/assets/AntLogo.png'
 
 const route     = useRoute()
 const router    = useRouter()
 const authStore = useAuthStore()
+const uiStore = useUiStore()
+const clubStore = useClubStore()
 
 const clubId = computed(() => route.params.clubId)
+const { club } = storeToRefs(clubStore)
 
 // ── 데이터 ────────────────────────────────────────────
-const club             = ref(null)
+const president        = ref(null)
 const executives       = ref([])
 const currentSemester  = ref(null)
 const myMembership     = ref(null)
@@ -243,23 +248,6 @@ const stats            = ref({ totalMembers: 0, semesterSchedules: 0, avgAttenda
 // ── 가입 신청 ─────────────────────────────────────────
 const joinReason  = ref('')
 const showModal   = ref(false)
-
-// ── API 호출 ──────────────────────────────────────────
-async function load() {
-  const [clubRes, execRes, semRes, statsRes] = await Promise.all([
-    fetchClubDetail(clubId.value),
-    fetchClubExecutives(clubId.value),
-    fetchCurrentSemester(clubId.value),
-    fetchClubStats(clubId.value),
-  ])
-  club.value            = clubRes.data
-  executives.value      = execRes.data
-  currentSemester.value = semRes.data
-  stats.value           = statsRes.data
-
-  // 내 가입 상태
-  myMembership.value = clubRes.data.myMembership ?? null
-}
 
 function applyJoin() {
   showModal.value = true
@@ -292,11 +280,36 @@ function roleLabel(v)     {
 function termLabel(v)     {
   return { '1': '1학기', '2': '2학기', SUMMER: '여름학기', WINTER: '겨울학기' }[v] ?? v
 }
-function formatDate(dt)   {
-  return dt ? dt.slice(0, 10) : '-'
+function formatDate(datetime)   {
+  const date = new Date(datetime)
+
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const day = String(date.getDate()).padStart(2, '0')
+
+    return `${year}년 ${month}월 ${day}일`
 }
 
-onMounted(load)
+// ── API 호출 ──────────────────────────────────────────
+const fetchData = async () => {
+  uiStore.isLoading = true
+
+  try {
+    const clubId = route.params.clubId
+    await clubStore.fetchClub(clubId)
+    
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
+  } finally {
+    uiStore.isLoading = false
+  }
+}
+
+onMounted(async() => {
+  await fetchData()
+})
+
 </script>
 
 <style scoped>
@@ -312,7 +325,9 @@ onMounted(load)
   border-radius: 16px;
   overflow: hidden;
   margin-bottom: 32px;
+  position: relative
 }
+
 .banner-overlay {
   width: 100%;
   height: 100%;
@@ -322,6 +337,44 @@ onMounted(load)
   padding: 28px;
   gap: 20px;
 }
+
+.btn-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px 8px 10px;
+  
+  /* 배너 위에서 잘 보이도록 반투명 유리 효과 */
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-back .back-icon {
+  width: 16px;
+  height: 16px;
+}
+
+/* 호버 효과: 배경이 살짝 진해지고 왼쪽으로 2px 이동 */
+.btn-back:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateX(-2px);
+}
+
 .club-logo {
   width: 80px;
   height: 80px;

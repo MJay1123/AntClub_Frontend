@@ -176,7 +176,7 @@ const handleLogin = async () => {
 
   if(isSuccess){
     await uiStore.alert('로그인 성공', '로그인에 성공하셨습니다!')
-    router.push('/')
+    router.push('/club')
   }
 }
 </script>

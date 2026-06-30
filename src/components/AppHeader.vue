@@ -21,7 +21,7 @@
 
                     <transition name="dropdown">
                         <div v-if="clubMenuOpen" class="dropdown-menu">
-                            <router-link to="/" class="dropdown-item" @click="clubMenuOpen = false">
+                            <router-link to="/club" class="dropdown-item" @click="clubMenuOpen = false">
                                 <span class="dropdown-icon">📋</span>
                                 <div>
                                     <p class="dropdown-title">동아리 목록</p>
@@ -257,8 +257,9 @@ const handleLogout = async () => {
 
 onMounted(async () => {
     window.addEventListener("scroll", handleScroll), 
-    await authStore.fetchMe()
+    await authStore.fetchLoginInfo()
 });
+
 onUnmounted(() => window.removeEventListener("scroll", handleScroll));
 </script>
 

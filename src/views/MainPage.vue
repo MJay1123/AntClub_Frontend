@@ -12,7 +12,10 @@
           AntClub과 함께 동아리를 더 스마트하게 관리하세요.<br />
           회원 관리부터 회비, 일정, 게시판까지 모두 지원합니다.
         </p>
-        <div class="hero-buttons">
+        <div v-if="authStore.isLoggedIn" class="hero-buttons">
+          <button class="btn btn-primary" @click="router.push('/club')">동아리 관리하러 가기</button>
+        </div>
+        <div v-else class="hero-buttons">
           <button class="btn btn-primary" @click="router.push('/register')">회원가입</button>
           <button class="btn btn-outline" @click="router.push('/login')">로그인</button>
         </div>
@@ -64,7 +67,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { useAuthStore } from '@/stores/auth'
+
 const router = useRouter()
+
+const authStore = useAuthStore()
 
 const features = ref([
   {

@@ -26,20 +26,49 @@ const routes = [
     component: RegisterPage,
     meta: { guestOnly: true },
   },
+  {
+    path: '/club',
+    name: 'ClubList',
+    component: () => import('@/views/club/ClubListPage.vue'),
+  },
+  {
+    path: '/club/:clubId',
+    name: 'ClubDetail',
+    component: () => import('@/views/club/ClubDetailPage.vue'),
+  },
+  {
+    path: '/club/:clubId/manage',
+    component: () => import('@/views/club/ManageClubPage.vue'),
+    children: [
+      {
+        path: '',
+        redirect: 'members',
+      },
+      {
+        path: 'members',
+        name: 'ClubMember',
+        component: () => import('@/views/club/ClubMemberPage.vue'),
+      },
+      {
+        path: 'schedules',
+        name: 'ClubSchedule',
+        component: () => import('@/views/club/ClubSchedulePage.vue'),
+      },
+      {
+        path: 'dues',
+        name: 'ClubDue',
+        component: () => import('@/views/club/ClubDuePage.vue'),
+      },
+    ],
+  },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior() {
+    return { top: 0 }
+  }
 });
-
-// router.beforeEach((to, from, next) => {
-//   const token = localStorage.getItem("token");
-//   if (to.meta.guestOnly && token) {
-//     next("/");
-//   } else {
-//     next();
-//   }
-// });
 
 export default router;
