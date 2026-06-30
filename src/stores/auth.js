@@ -13,6 +13,9 @@ export const useAuthStore = defineStore("auth", () => {
       const memberId = response.data.memberId
       localStorage.setItem('memberId', memberId)
 
+      const expireTime = Date.now() + 60 * 60 * 1000;
+      localStorage.setItem('expireTime', expireTime.toString())
+      
       await fetchMe()
 
     } catch (error) {
@@ -26,11 +29,27 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const fetchMe = async () => {
+    const expireTime = Number(localStorage.getItem("expireTime"));
+    if(!expireTime) {
+      localStorage.removeItem('memberId')
+      return
+    }
+    if(Date.now() >= expireTime){
+      console.log('로그인 정보 만료')
+      localStorage.removeItem('memberId')
+      localStorage.removeItem('expireTime')
+    }
     const memberId = localStorage.getItem('memberId')
-    if(!memberId) return
+    if(!memberId) {
+      return
+    }
     try {
       const response = await memberApi.getMember(memberId)
       userInfo.value = response.data
+
+      const expireTime = Date.now() + 60 * 60 * 1000;
+      localStorage.setItem('expireTime', expireTime.toString())
+      
     } catch (error) {
       console.log('auth.js - fetchMe :', error)
     }
