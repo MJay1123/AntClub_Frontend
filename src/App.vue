@@ -52,7 +52,7 @@ const { modal } = storeToRefs(uiStore)
 
 onMounted(() => {
   if (authStore.isLoggedIn) {
-    authStore.fetchMe()
+    authStore.fetchLoginInfo()
   }
 })
 </script>

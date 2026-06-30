@@ -8,6 +8,7 @@ export const useAuthStore = defineStore("auth", () => {
   const isLoggedIn = computed(() => userInfo.value !== null);
 
   const login = async (request) => {
+    console.log('auth.js - login')
     try {
       const response = await authApi.login(request)
       const memberId = response.data.memberId
@@ -16,19 +17,21 @@ export const useAuthStore = defineStore("auth", () => {
       const expireTime = Date.now() + 60 * 60 * 1000;
       localStorage.setItem('expireTime', expireTime.toString())
       
-      await fetchMe()
+      await fetchLoginInfo()
 
     } catch (error) {
-      console.log('auth.js - login :', error)
+      console.log('error', error)
     }
   };
 
   const logout = async () => {
+    console.log('auth.js - logout')
     userInfo.value = null;
     localStorage.removeItem("memberId");
   };
 
-  const fetchMe = async () => {
+  const fetchLoginInfo = async () => {
+    console.log('auth.js - fetchLoginInfo')
     const expireTime = Number(localStorage.getItem("expireTime"));
     if(!expireTime) {
       localStorage.removeItem('memberId')
@@ -51,13 +54,13 @@ export const useAuthStore = defineStore("auth", () => {
       localStorage.setItem('expireTime', expireTime.toString())
       
     } catch (error) {
-      console.log('auth.js - fetchMe :', error)
+      console.log('error', error)
     }
   }
 
   return {
     userInfo, isLoggedIn,
-    login, logout, fetchMe
+    login, logout, fetchLoginInfo
   }
 
 

@@ -6,12 +6,13 @@ export const useMajorStore = defineStore("major", () => {
     const majors = ref([])
     
     const fetchMajorsInSchool = async (schoolId) => {
+        console.log('major.js - fetchMajorsInSchool')
         try {
             const response = await majorApi.getMajorListInSchool(schoolId)
-            console.log('fetchMajors - response', response)
+            console.log('response', response)
             majors.value = response.data
         } catch (error) {
-            console.log('major.js - fetchMajors :', error)
+            console.log('error', error)
         }
     }
     return {

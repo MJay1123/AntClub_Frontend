@@ -24,7 +24,7 @@ export const useUiStore = defineStore('ui', () => {
         mode: 'alert', // 'alert' 또는 'confirm'
         title: '',
         content: '',
-        resolve: null, // 핵심: 각 컴포넌트에서 기다리고 있는 '성공/실패 응답 함수'
+        resolve: null, // 각 컴포넌트에서 기다리고 있는 '성공/실패 응답 함수'
     })
 
     const openModal = (mode, title, content) => {
