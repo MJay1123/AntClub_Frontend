@@ -502,23 +502,10 @@ import ClubBadge      from '@/components/club/ClubBadge.vue'
 import BaseModal      from '@/components/common/BaseModal.vue'
 import BasePagination from '@/components/common/BasePagination.vue'
 
-// ── Props ─────────────────────────────────────────────
-const props = defineProps({
-  myRole:          { type: String, default: 'MEMBER' },
-  myClubMemberId:  { type: Number, default: null },
-})
 
 const route  = useRoute()
 const ui     = useUiStore()
 const clubId = computed(() => route.params.clubId)
-
-const isExecutiveAbove = computed(() =>
-  ['PRESIDENT', 'EXECUTIVE'].includes(props.myRole)
-)
-
-// ── 학기 ──────────────────────────────────────────────
-const semesters          = ref([])
-const selectedSemesterId = ref(null)
 
 // ── 일정 목록 ─────────────────────────────────────────
 const schedules   = ref([])

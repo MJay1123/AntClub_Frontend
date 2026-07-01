@@ -38,3 +38,7 @@ export const semesterApi = {
     getSemester: (semesterId) => api.get(`/semester/${semesterId}`)
 }
 
+export const scheduleApi = {
+    
+}
+
