@@ -1,23 +1,21 @@
 <template>
   <Teleport to="body">
     <Transition name="fade">
-      <div v-if="modelValue" class="modal-backdrop" @click.self="onBackdrop">
+      <div v-if="modelValue" class="modal-backdrop" @click.self="$emit('update:modelValue', false)">
         <Transition name="slide">
           <div v-if="modelValue" class="modal-container" :class="`modal-${size}`">
 
-            <!-- 헤더 -->
             <div class="modal-header">
               <h3 class="modal-title">
                 <slot name="title" />
               </h3>
-              <button class="close-btn" @click="$emit('update:modelValue', false)">
+              <button class="close-btn" @click="emit('update:modelValue', false)">
                 ✕
               </button>
             </div>
 
-            <!-- 바디 -->
             <div class="modal-body">
-              <slot />
+              <slot name="body"/>
             </div>
 
             <!-- 푸터 -->
@@ -41,9 +39,6 @@ defineProps({
 
 const emit = defineEmits(['update:modelValue', 'close'])
 
-function onBackdrop(closeOnBackdrop) {
-  if (closeOnBackdrop) emit('update:modelValue', false)
-}
 </script>
 
 <style scoped>

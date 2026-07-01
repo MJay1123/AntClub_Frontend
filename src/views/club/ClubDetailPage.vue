@@ -4,7 +4,7 @@
     <!-- ===== 배너 ===== -->
     <div class="banner" :style="club.bannerImage ? `background-image:url(${club.bannerImage})` : ''">
 
-      <button class="btn-back" @click="$router.back()">
+      <button class="btn-back" @click="router.push('/club')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="back-icon">
           <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
@@ -160,14 +160,7 @@
           </template>
 
           <template v-else>
-            <p class="join-guide">{{ club.joinType === 'FREE' ? '자유롭게 가입할 수 있습니다.' : '가입 신청 후 임원 승인이 필요합니다.' }}</p>
-            <textarea
-              v-if="club.joinType === 'APPROVAL'"
-              v-model="joinReason"
-              placeholder="가입 동기를 입력해주세요"
-              class="textarea"
-              rows="4"
-            />
+            <p class="join-guide">가입 유형 : {{ joinTypeLabel(club.joinType) }}</p>
             <button class="btn btn-primary" :disabled="club.status !== 'ACTIVE'" @click="showModal=true">
               {{ club.status === 'ACTIVE' ? '가입 신청' : '가입 불가' }}
             </button>
@@ -214,28 +207,30 @@
 
     </div>
 
-    <BaseModal v-model="showModal">
+    <BaseModal v-model="showModal" :close-on-backdrop="false" @close="showModal=false">
       <template #title>가입 신청</template>
       
-      <div class="join-form">
-        <p style="margin-bottom: 12px;"><strong>[{{ club.clubName }}]</strong>에 가입 신청하시겠습니까?</p>
-        
-        <textarea
-          v-model="joinReason"
-          placeholder="가입 동기를 입력해주세요 (예: 재밌어보여서 지원했습니다.)"
-          class="textarea"
-          rows="3"
-          style="width: 100%; margin-bottom: 8px;"
-        ></textarea>
-        
-        <textarea
-          v-model="memo"
-          placeholder="메모를 입력해주세요 (예: 잘 부탁드립니다.)"
-          class="textarea"
-          rows="2"
-          style="width: 100%;"
-        ></textarea>
-      </div>
+      <template #body>
+        <div class="join-form">
+          <p style="margin-bottom: 12px;"><strong>[{{ club.clubName }}]</strong>에 가입 신청하시겠습니까?</p>
+          
+          <textarea
+            v-model="joinReason"
+            placeholder="가입 동기를 입력해주세요"
+            class="textarea"
+            rows="3"
+            style="width: 100%; margin-bottom: 8px;"
+          ></textarea>
+          
+          <textarea
+            v-model="memo"
+            placeholder="메모를 입력해주세요 (예: 잘 부탁드립니다.)"
+            class="textarea"
+            rows="2"
+            style="width: 100%;"
+          ></textarea>
+        </div>
+      </template>
 
       <template #footer>
         <button class="btn btn-outline" @click="showModal=false">취소</button>
@@ -294,6 +289,10 @@ const confirmApply = async () => {
 
   try {
     const memberId = localStorage.getItem('memberId')
+    if(!joinReason.value) {
+      uiStore.alert('가입 동기 작성 필수!', '가입 동기를 작성해주세요!')
+      return
+    }
     const request = {
       clubId: route.params.clubId,
       memberId: memberId,
@@ -304,17 +303,21 @@ const confirmApply = async () => {
     }
     await clubMemberApi.create(request)
 
-    showModal.value = false
-    joinReason.value = null
-    memo.value = null
     isSuccess = true
-
     await fetchData()
+
   } catch (error) {
-    uiStore.isError.value = true
+    uiStore.isError = true
     uiStore.errorMessage = '동아리 가입 신청에 실패하였습니다.'
     console.log('error', error)
+  } finally {
+    uiStore.isLoading = false
   }
+
+  showModal.value = false
+  joinReason.value = null
+  memo.value = null
+
   if(isSuccess){
     uiStore.alert('신청 완료!', '동아리 가입이 신청되었습니다.')
   }
@@ -394,6 +397,7 @@ const fetchData = async () => {
     await clubStore.fetchClub(clubId)
     await clubMemberStore.fetchClubMembers(clubId)
     await clubMemberStore.fetchMe(clubId)
+    console.log('myClubMember', myClubMember.value)
 
     await fetchExecutives()
 
@@ -401,7 +405,7 @@ const fetchData = async () => {
 
   } catch (error) {
     uiStore.isError = true
-    uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
+    uiStore.errorMessage = error.message || '정보를 불러오는데 실패했습니다.'
   } finally {
     uiStore.isLoading = false
   }

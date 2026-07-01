@@ -18,7 +18,7 @@
         <div class="stat-card">
           <p class="stat-label">일반 회원</p>
           <p class="stat-value">{{ approvedMembers?.length - (presidentMember?.length | 1) - executiveMembers?.length
-            }}<span>명</span></p>
+          }}<span>명</span></p>
         </div>
         <div class="stat-card warn">
           <p class="stat-label">가입 대기</p>
@@ -45,24 +45,24 @@
     <div v-if="pendingMembers.length" class="pending-section">
       <h3>⏳ 가입 대기 ({{ pendingMembers?.length }}명)</h3>
       <div class="pending-list">
-        <div v-for="m in pendingMembers" :key="m.clubMemberId" class="pending-card">
+        <div v-for="m in pendingMembers" :key="m.clubMemberId" class="pending-card" @click="openPendingMemberDetail(m)">
           <div class="member-info">
             <strong>{{ m.name }}</strong>
             <span class="student-id">{{ m.studentId }}</span>
             <span class="dept">{{ m.majorName }}</span>
           </div>
           <p class="join-reason">{{ m.joinReason || '사유 없음' }}</p>
-          <div class="pending-actions">
-            <button class="btn btn-primary sm" @click="approveJoin(m.clubMemberId)">
-              승인
-            </button>
-            <button class="btn btn-danger sm" @click="rejectJoin(m.clubMemberId)">
-              거절
-            </button>
-          </div>
         </div>
       </div>
     </div>
+
+    <PendingMemberDetailModal 
+      v-model="showPendingMemberDetailModal"
+      :member="memberStore.member"
+      :club-member="clubMemberStore.clubMember"
+      @approve="approveJoin"
+      @reject="rejectJoin"
+    />
 
     <!-- ===== 회원 테이블 ===== -->
     <div class="table-wrap">
@@ -70,15 +70,16 @@
         <thead>
           <tr>
             <th>이름</th>
+            <th>성별</th>
             <th>학번</th>
             <th>전공</th>
             <th>역할</th>
+            <th>가입 상태</th>
             <th>가입일</th>
             <th>신청</th>
             <th>참여</th>
             <th>참여율</th>
             <th>불참율</th>
-            <th>관리</th>
           </tr>
         </thead>
         <tbody>
@@ -88,13 +89,15 @@
                 {{ m.name || '이름 없음' }}
               </div>
             </td>
+            <td>
+              <ClubBadge type="gender" :value="m.gender" />
+            </td>
             <td>{{ m.studentId || '학번 없음' }}</td>
             <td>{{ m.majorName || '전공 없음' }}</td>
             <td>
-              <span class="role-badge" :class="roleBadgeClass(m.clubRole)">
-                {{ roleLabel(m.clubRole) }}
-              </span>
+              <ClubBadge type="role" :value="m.clubRole" />
             </td>
+            <td><ClubBadge type="memberStatus" :value="m.status"/></td>
             <td>{{ formatDate(m.joinDate) }}</td>
             <td>{{ m.appliedSchedules }}</td>
             <td>{{ m.attendedSchedules }}</td>
@@ -108,41 +111,15 @@
                 {{ m.noShowRate?.toFixed(1) }}%
               </span>
             </td>
-            <td @click.stop>
-              <select :value="m.clubRole" @change="changeRole(m.clubMemberId, $event.target.value)" class="role-select"
-                :disabled="m.clubRole === 'PRESIDENT' && m.clubRole !== 'PRESIDENT'">
-                <option value="PRESIDENT">회장</option>
-                <option value="EXECUTIVE">임원</option>
-                <option value="MEMBER">회원</option>
-              </select>
-            </td>
           </tr>
         </tbody>
       </table>
-
       <div v-if="clubMembers.length === 0" class="empty">회원이 없습니다.</div>
     </div>
 
+    <MemberDetailModal v-model="showMemberDetailModal" @close="showMemberDetailModal=false" @updated="fetchData" />
+
     <BasePagination :current-page="page" :total-pages="totalPages" @change="onPageChange" />
-
-    <!-- ===== 회원 상세 모달 ===== -->
-    <BaseModal v-if="selectedMember" @close="selectedMember = null" size="lg">
-      <template #title>회원 상세 정보</template>
-      <MemberDetailModal :member="selectedMember" @close="selectedMember = null" @updated="fetchData" />
-    </BaseModal>
-
-    <BaseModal 
-      v-if="selectedMember" 
-      :modelValue="true" 
-      @update:modelValue="selectedMember = null" 
-      size="lg"
-    >
-      <template #title>회원 상세 정보</template>
-      <MemberDetailModal 
-        :member="selectedMember" 
-        @updated="fetchData" 
-      />
-    </BaseModal>
 
   </div>
 </template>
@@ -153,13 +130,20 @@ import { useRoute } from 'vue-router'
 import { storeToRefs } from 'pinia'
 
 import BasePagination from '@/components/common/BasePagination.vue'
-import BaseModal from '@/components/common/BaseModal.vue'
 import MemberDetailModal from '@/components/club/MemberDetailModal.vue'
+import PendingMemberDetailModal from '@/components/club/PendingMemberDetailModal.vue'
+import ClubBadge from '@/components/club/ClubBadge.vue'
 
 import { useClubMemberStore } from '@/stores/clubMember'
+import { useMemberStore } from '@/stores/member'
+import { useUiStore } from '@/stores/ui'
+import { formatDate } from '@/utils/format'
+import { clubMemberApi } from '@/api/restApi'
 
 const route = useRoute()
 const clubMemberStore = useClubMemberStore()
+const memberStore = useMemberStore()
+const uiStore = useUiStore()
 
 const { clubMembers, approvedMembers, pendingMembers, presidentMember, executiveMembers } = storeToRefs(clubMemberStore)
 
@@ -169,13 +153,10 @@ const totalPages = ref(1)
 const searchKeyword = ref('')
 const filterRole = ref('')
 const filterStatus = ref('APPROVED')
-const selectedMember = ref(null)
+const showPendingMemberDetailModal = ref(false)
+const showMemberDetailModal = ref(false)
 
 // ── 유틸 ──────────────────────────────────────────────
-const openMemberDetail = (m) => {
-  selectedMember.value = m
-}
-
 const onPageChange = (p) => {
   page.value = p
   fetchData()
@@ -186,12 +167,56 @@ function onSearch() {
   clearTimeout(timer)
   timer = setTimeout(() => { page.value = 1; fetchData() }, 400)
 }
-
-function roleLabel(v) { return { PRESIDENT: '회장', EXECUTIVE: '임원', MEMBER: '회원' }[v] ?? v }
-function roleBadgeClass(v) { return { PRESIDENT: 'role-president', EXECUTIVE: 'role-executive', MEMBER: 'role-member' }[v] ?? '' }
-function formatDate(d) { return d ? d.slice(0, 10) : '-' }
 function rateClass(r) { return r >= 80 ? 'rate-high' : r >= 50 ? 'rate-mid' : 'rate-low' }
 function noShowClass(r) { return r >= 30 ? 'rate-low' : r >= 10 ? 'rate-mid' : 'rate-high' }
+
+const openPendingMemberDetail = async(m) => {
+  uiStore.isLoading = true 
+
+  try {
+    await clubMemberStore.fecthClubMemberByClubMemberId(m.clubMemberId) 
+    await memberStore.fetchMember(m.memberId)
+
+    showPendingMemberDetailModal.value = true 
+    
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = '회원 상세 정보를 불러오지 못했습니다.'
+    console.error(error)
+  } finally {
+    uiStore.isLoading = false 
+  }
+}
+
+const approveJoin = async (clubMemberId) => {
+  uiStore.isLoading = true
+  try {
+    await clubMemberApi.updateStatus(clubMemberId, {status: 'APPROVED'})
+    showPendingMemberDetailModal.value = false // 💡 모달 닫기
+    await fetchData() // 💡 목록 새로고침
+  } catch (error) {
+    console.log('error', error)
+    uiStore.isError = true
+    uiStore.errorMessage = '승인 처리에 실패했습니다.'
+  } finally {
+    uiStore.isLoading = false
+  }
+}
+
+const rejectJoin = async (clubMemberId) => {
+  uiStore.isLoading = true
+  try {
+    await clubMemberApi.updateStatus(clubMemberId, {status: 'REJECTED'})
+    showPendingMemberDetailModal.value = false // 💡 모달 닫기
+    await fetchData() // 💡 목록 새로고침
+  } catch (error) {
+    console.log('error', error)
+    uiStore.isError = true
+    uiStore.errorMessage = '거절 처리에 실패했습니다.'
+  } finally {
+    uiStore.isLoading = false
+  }
+}
 
 const fetchData = async () => {
   const clubId = route.params.clubId
@@ -294,6 +319,50 @@ onMounted(async () => {
   background: #fffbeb;
   border: 1px solid #fcd34d;
   border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.pending-card:hover {
+  background: #ffe7bd;
+}
+
+
+.btn-detail-arrow {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #999;
+  cursor: pointer;
+  padding: 8px;
+  margin-left: 8px;
+  transition: color 0.2s;
+}
+
+.member-detail-box .detail-row {
+  margin-bottom: 12px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.detail-value {
+  font-size: 1rem;
+  color: #333;
+}
+
+.text-box {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  /* 줄바꿈 유지 */
 }
 
 .member-info {

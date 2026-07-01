@@ -25,9 +25,12 @@ export const clubApi = {
 
 export const clubMemberApi = {
     getClubMembers: (clubId) => api.get(`/club-member/club/${clubId}`),
+    getClubMemberByClubMemberId: (clubMemberId) => api.get(`/club-member/${clubMemberId}`),
     getClubMember: (clubId, memberId) => api.get(`/club-member/club/${clubId}/member/${memberId}`),
     create: (request) => api.post('/club-member', request),
     delete: (clubMemberId) => api.delete('/club-member'),
+    updateStatus: (clubMemberId, dto) => api.patch(`/club-member/${clubMemberId}/status`, dto),
+    updateRole: (clubMemberId, dto) => api.patch(`/club-member/${clubMemberId}/role`, dto),
 }
 
 export const semesterApi = {

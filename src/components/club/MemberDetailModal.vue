@@ -1,314 +1,299 @@
 <template>
-    <div class="member-detail-modal">
+    <BaseModal v-model="isVisible" @close="showMemberDetailModal = false" :size="lg">
+        <template #title>회원 상세 정보</template>
+        <template #body>
+            <div class="member-detail-modal">
 
-        <!-- ===== 프로필 헤더 ===== -->
-        <div class="profile-header">
-            <img :src="member.profileImage || defaultLogo" class="profile-avatar" alt="avatar" />
-            <div class="profile-info">
-                <div class="name-row">
-                    <h2 class="member-name">{{ member.name }}</h2>
-                    <ClubBadge type="role" :value="member.clubRole" />
-                    <ClubBadge type="memberStatus" :value="member.status" size="sm" />
-                </div>
-                <p class="member-sub">{{ member.department }} · {{ member.studentId }}</p>
-                <p class="member-sub">{{ member.school }}</p>
-            </div>
-        </div>
-
-        <!-- ===== 탭 ===== -->
-        <div class="tab-nav">
-            <button v-for="tab in tabs" :key="tab.key" class="tab-btn" :class="{ active: activeTab === tab.key }"
-                @click="activeTab = tab.key">
-                {{ tab.icon }} {{ tab.label }}
-            </button>
-        </div>
-
-        <!-- ===== 기본 정보 탭 ===== -->
-        <div v-if="activeTab === 'info'" class="tab-content">
-
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">📞 전화번호</span>
-                    <span>{{ member.phone || '-' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">📧 이메일</span>
-                    <span>{{ member.email || '-' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">🎂 생년월일</span>
-                    <span>{{ formatDate(member.birthDate) }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">📚 학년</span>
-                    <span>{{ member.grade ? `${member.grade}학년` : '-' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">📋 재학 상태</span>
-                    <span>{{ enrollmentLabel(member.enrollmentStatus) }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">📅 가입일</span>
-                    <span>{{ formatDate(member.joinDate) }}</span>
-                </div>
-            </div>
-
-            <!-- 자기소개 -->
-            <div v-if="member.introduction" class="section">
-                <p class="section-title">자기소개</p>
-                <p class="desc-text">{{ member.introduction }}</p>
-            </div>
-
-            <!-- 가입 동기 -->
-            <div v-if="member.joinReason" class="section">
-                <p class="section-title">가입 동기</p>
-                <p class="desc-text">{{ member.joinReason }}</p>
-            </div>
-
-        </div>
-
-        <!-- ===== 프로필/성향 탭 ===== -->
-        <div v-else-if="activeTab === 'profile'" class="tab-content">
-
-            <!-- 성격 유형 -->
-            <div class="section">
-                <p class="section-title">성격 유형</p>
-                <div class="personality-grid">
-
-                    <!-- MBTI -->
-                    <div class="personality-card" v-if="member.mbti">
-                        <span class="personality-label">MBTI</span>
-                        <span class="personality-value mbti">{{ member.mbti }}</span>
-                    </div>
-                    <div class="personality-card empty-card" v-else>
-                        <span class="personality-label">MBTI</span>
-                        <span class="personality-empty">미입력</span>
-                    </div>
-
-                    <!-- 에니어그램 -->
-                    <div class="personality-card" v-if="member.personalityType">
-                        <span class="personality-label">기타 유형</span>
-                        <span class="personality-value">{{ member.personalityType }}</span>
-                    </div>
-
-                    <!-- 선호 역할 -->
-                    <div class="personality-card" v-if="member.preferredRole">
-                        <span class="personality-label">선호 역할</span>
-                        <span class="personality-value">{{ preferredRoleLabel(member.preferredRole) }}</span>
-                    </div>
-
-                    <!-- 활동 시간대 -->
-                    <div class="personality-card" v-if="member.activityPreference">
-                        <span class="personality-label">선호 시간대</span>
-                        <span class="personality-value">{{ activityPrefLabel(member.activityPreference) }}</span>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- 관심사 / 특기 -->
-            <div class="section two-col">
-                <div>
-                    <p class="section-title">관심사</p>
-                    <div class="tag-list">
-                        <span v-for="(interest, i) in parseList(member.interests)" :key="i" class="tag tag-blue">
-                            {{ interest }}
-                        </span>
-                        <span v-if="!member.interests" class="empty-text">없음</span>
-                    </div>
-                </div>
-                <div>
-                    <p class="section-title">특기</p>
-                    <div class="tag-list">
-                        <span v-for="(skill, i) in parseList(member.skills)" :key="i" class="tag tag-green">
-                            {{ skill }}
-                        </span>
-                        <span v-if="!member.skills" class="empty-text">없음</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SNS -->
-            <div class="section">
-                <p class="section-title">SNS</p>
-                <div class="sns-list">
-                    <a v-if="member.instagramId" :href="`https://instagram.com/${member.instagramId}`" target="_blank"
-                        class="sns-item instagram">
-                        📸 @{{ member.instagramId }}
-                    </a>
-                    <a v-if="member.githubId" :href="`https://github.com/${member.githubId}`" target="_blank"
-                        class="sns-item github">
-                        🐙 {{ member.githubId }}
-                    </a>
-                    <span v-if="!member.instagramId && !member.githubId" class="empty-text">없음</span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ===== 활동 통계 탭 ===== -->
-        <div v-else-if="activeTab === 'stats'" class="tab-content">
-
-            <!-- 통계 카드 -->
-            <div class="stats-grid">
-                <div class="stats-card">
-                    <p class="stats-label">전체 일정</p>
-                    <p class="stats-value">{{ member.totalSchedules ?? 0 }}</p>
-                    <p class="stats-unit">개</p>
-                </div>
-                <div class="stats-card">
-                    <p class="stats-label">참여 신청</p>
-                    <p class="stats-value blue">{{ member.appliedSchedules ?? 0 }}</p>
-                    <p class="stats-unit">개</p>
-                </div>
-                <div class="stats-card">
-                    <p class="stats-label">실제 참여</p>
-                    <p class="stats-value green">{{ member.attendedSchedules ?? 0 }}</p>
-                    <p class="stats-unit">개</p>
-                </div>
-                <div class="stats-card">
-                    <p class="stats-label">신청 후 불참</p>
-                    <p class="stats-value red">{{ member.absentAfterApply ?? 0 }}</p>
-                    <p class="stats-unit">개</p>
-                </div>
-            </div>
-
-            <!-- 참여율 게이지 -->
-            <div class="section">
-
-                <div class="gauge-row">
-                    <div class="gauge-info">
-                        <span class="gauge-label">참여율</span>
-                        <span class="gauge-value" :class="rateColor(member.attendanceRate)">
-                            {{ member.attendanceRate?.toFixed(1) ?? 0 }}%
-                        </span>
-                    </div>
-                    <div class="gauge-bar">
-                        <div class="gauge-fill" :class="rateColor(member.attendanceRate)"
-                            :style="{ width: `${member.attendanceRate ?? 0}%` }" />
+                <!-- ===== 프로필 헤더 ===== -->
+                <div class="profile-header">
+                    <img :src="member.profileImage || defaultLogo" class="profile-avatar" alt="avatar" />
+                    <div class="profile-info">
+                        <div class="name-row">
+                            <h2 class="member-name">{{ member.name }}</h2>
+                            <ClubBadge type="role" :value="member.clubRole" />
+                            <ClubBadge type="memberStatus" :value="member.status" size="sm" />
+                            <ClubBadge type="gender" :value="member.gender" />
+                        </div>
+                        <p class="member-sub">{{ member.majorName }} · {{ member.studentId }}</p>
+                        <p class="member-sub">{{ member.schoolName }}</p>
                     </div>
                 </div>
 
-                <div class="gauge-row">
-                    <div class="gauge-info">
-                        <span class="gauge-label">불참율</span>
-                        <span class="gauge-value" :class="noShowColor(member.noShowRate)">
-                            {{ member.noShowRate?.toFixed(1) ?? 0 }}%
-                        </span>
-                    </div>
-                    <div class="gauge-bar">
-                        <div class="gauge-fill" :class="noShowColor(member.noShowRate)"
-                            :style="{ width: `${member.noShowRate ?? 0}%` }" />
-                    </div>
+                <!-- ===== 탭 ===== -->
+                <div class="tab-nav">
+                    <button v-for="tab in tabs" :key="tab.key" class="tab-btn"
+                        :class="{ active: activeTab === tab.key }" @click="activeTab = tab.key">
+                        {{ tab.icon }} {{ tab.label }}
+                    </button>
                 </div>
 
-            </div>
+                <!-- ===== 기본 정보 탭 ===== -->
+                <div v-if="activeTab === 'info'" class="tab-content">
 
-            <!-- AI 점수 -->
-            <div class="section">
-                <p class="section-title">AI 활동 점수</p>
-                <div class="ai-score-grid">
-                    <div class="ai-score-item">
-                        <p class="ai-score-label">활동 점수</p>
-                        <div class="ai-score-bar-wrap">
-                            <div class="ai-score-bar">
-                                <div class="ai-score-fill blue" :style="{ width: `${member.activityScore ?? 0}%` }" />
-                            </div>
-                            <span class="ai-score-num">{{ member.activityScore?.toFixed(1) ?? 0 }}</span>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">📞 전화번호</span>
+                            <span>{{ formatPhoneNumber(member.phoneNumber) || '-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📧 이메일</span>
+                            <span>{{ member.email || '-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">🎂 생년월일</span>
+                            <span>{{ formatDate(member.birthDate) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📚 학년</span>
+                            <span>{{ member.grade ? `${member.grade}학년` : '-' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📋 재학 상태</span>
+                            <span>{{ enrollmentLabel(member.enrollmentStatus) }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">📅 가입일</span>
+                            <span>{{ formatDate(member.joinDate) }}</span>
                         </div>
                     </div>
-                    <div class="ai-score-item">
-                        <p class="ai-score-label">신뢰도 점수</p>
-                        <div class="ai-score-bar-wrap">
-                            <div class="ai-score-bar">
-                                <div class="ai-score-fill green"
-                                    :style="{ width: `${member.reliabilityScore ?? 0}%` }" />
+                    <div v-if="member.joinReason" class="section">
+                        <p class="section-title">가입 동기</p>
+                        <p class="desc-text">{{ member.joinReason }}</p>
+                    </div>
+
+                </div>
+
+                <div v-else-if="activeTab === 'profile'" class="tab-content">
+
+                    <div class="section">
+                        <p class="section-title">성격 유형</p>
+                        <div class="personality-grid">
+
+                            <div class="personality-card" v-if="member.mbti">
+                                <span class="personality-label">MBTI</span>
+                                <span class="personality-value mbti">{{ member.mbti }}</span>
                             </div>
-                            <span class="ai-score-num">{{ member.reliabilityScore?.toFixed(1) ?? 0 }}</span>
+                            <div class="personality-card empty-card" v-else>
+                                <span class="personality-label">MBTI</span>
+                                <span class="personality-empty">미입력</span>
+                            </div>
+
+                            <!-- 에니어그램 -->
+                            <div class="personality-card" v-if="member.personalityType">
+                                <span class="personality-label">기타 유형</span>
+                                <span class="personality-value">{{ member.personalityType }}</span>
+                            </div>
+
+                            <!-- 선호 역할 -->
+                            <div class="personality-card" v-if="member.preferredRole">
+                                <span class="personality-label">선호 역할</span>
+                                <span class="personality-value">{{ preferredRoleLabel(member.preferredRole) }}</span>
+                            </div>
+
+                            <!-- 활동 시간대 -->
+                            <div class="personality-card" v-if="member.activityPreference">
+                                <span class="personality-label">선호 시간대</span>
+                                <span class="personality-value">{{ activityPrefLabel(member.activityPreference)
+                                    }}</span>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 관심사 / 특기 -->
+                    <div class="section two-col">
+                        <div>
+                            <p class="section-title">관심사</p>
+                            <div class="tag-list">
+                                <span v-for="(interest, i) in parseList(member.interests)" :key="i"
+                                    class="tag tag-blue">
+                                    {{ interest }}
+                                </span>
+                                <span v-if="!member.interests" class="empty-text">없음</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="section-title">특기</p>
+                            <div class="tag-list">
+                                <span v-for="(skill, i) in parseList(member.skills)" :key="i" class="tag tag-green">
+                                    {{ skill }}
+                                </span>
+                                <span v-if="!member.skills" class="empty-text">없음</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- 최근 참여 이력 -->
-            <div class="section">
-                <p class="section-title">최근 참여 이력</p>
-                <div class="history-list">
-                    <div v-for="h in member.recentHistory ?? []" :key="h.scheduleId" class="history-item">
-                        <span class="history-date">{{ formatDate(h.startedAt) }}</span>
-                        <span class="history-title">{{ h.title }}</span>
-                        <span class="history-status" :class="h.isAttended ? 'text-green' : 'text-red'">
-                            {{ h.isAttended ? '✅ 참여' : '❌ 불참' }}
-                        </span>
+                <!-- ===== 활동 통계 탭 ===== -->
+                <div v-else-if="activeTab === 'stats'" class="tab-content">
+
+                    <!-- 통계 카드 -->
+                    <div class="stats-grid">
+                        <div class="stats-card">
+                            <p class="stats-label">전체 일정</p>
+                            <p class="stats-value">{{ member.totalSchedules ?? 0 }}</p>
+                            <p class="stats-unit">개</p>
+                        </div>
+                        <div class="stats-card">
+                            <p class="stats-label">참여 신청</p>
+                            <p class="stats-value blue">{{ member.appliedSchedules ?? 0 }}</p>
+                            <p class="stats-unit">개</p>
+                        </div>
+                        <div class="stats-card">
+                            <p class="stats-label">실제 참여</p>
+                            <p class="stats-value green">{{ member.attendedSchedules ?? 0 }}</p>
+                            <p class="stats-unit">개</p>
+                        </div>
+                        <div class="stats-card">
+                            <p class="stats-label">신청 후 불참</p>
+                            <p class="stats-value red">{{ member.absentAfterApply ?? 0 }}</p>
+                            <p class="stats-unit">개</p>
+                        </div>
                     </div>
-                    <div v-if="!member.recentHistory?.length" class="empty-text">참여 이력이 없습니다.</div>
+
+                    <!-- 참여율 게이지 -->
+                    <div class="section">
+
+                        <div class="gauge-row">
+                            <div class="gauge-info">
+                                <span class="gauge-label">참여율</span>
+                                <span class="gauge-value" :class="rateColor(member.attendanceRate)">
+                                    {{ member.attendanceRate?.toFixed(1) ?? 0 }}%
+                                </span>
+                            </div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" :class="rateColor(member.attendanceRate)"
+                                    :style="{ width: `${member.attendanceRate ?? 0}%` }" />
+                            </div>
+                        </div>
+
+                        <div class="gauge-row">
+                            <div class="gauge-info">
+                                <span class="gauge-label">불참율</span>
+                                <span class="gauge-value" :class="noShowColor(member.noShowRate)">
+                                    {{ member.noShowRate?.toFixed(1) ?? 0 }}%
+                                </span>
+                            </div>
+                            <div class="gauge-bar">
+                                <div class="gauge-fill" :class="noShowColor(member.noShowRate)"
+                                    :style="{ width: `${member.noShowRate ?? 0}%` }" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- AI 점수 -->
+                    <div class="section">
+                        <p class="section-title">AI 활동 점수</p>
+                        <div class="ai-score-grid">
+                            <div class="ai-score-item">
+                                <p class="ai-score-label">활동 점수</p>
+                                <div class="ai-score-bar-wrap">
+                                    <div class="ai-score-bar">
+                                        <div class="ai-score-fill blue"
+                                            :style="{ width: `${member.activityScore ?? 0}%` }" />
+                                    </div>
+                                    <span class="ai-score-num">{{ member.activityScore?.toFixed(1) ?? 0 }}</span>
+                                </div>
+                            </div>
+                            <div class="ai-score-item">
+                                <p class="ai-score-label">신뢰도 점수</p>
+                                <div class="ai-score-bar-wrap">
+                                    <div class="ai-score-bar">
+                                        <div class="ai-score-fill green"
+                                            :style="{ width: `${member.reliabilityScore ?? 0}%` }" />
+                                    </div>
+                                    <span class="ai-score-num">{{ member.reliabilityScore?.toFixed(1) ?? 0 }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 최근 참여 이력 -->
+                    <div class="section">
+                        <p class="section-title">최근 참여 이력</p>
+                        <div class="history-list">
+                            <div v-for="h in member.recentHistory ?? []" :key="h.scheduleId" class="history-item">
+                                <span class="history-date">{{ formatDate(h.startedAt) }}</span>
+                                <span class="history-title">{{ h.title }}</span>
+                                <span class="history-status" :class="h.isAttended ? 'text-green' : 'text-red'">
+                                    {{ h.isAttended ? '✅ 참여' : '❌ 불참' }}
+                                </span>
+                            </div>
+                            <div v-if="!member.recentHistory?.length" class="empty-text">참여 이력이 없습니다.</div>
+                        </div>
+                    </div>
+
                 </div>
-            </div>
 
-        </div>
+                <!-- ===== 관리자 메모 탭 (임원 이상) ===== -->
+                <div v-else-if="activeTab === 'memo'" class="tab-content">
 
-        <!-- ===== 관리자 메모 탭 (임원 이상) ===== -->
-        <div v-else-if="activeTab === 'memo'" class="tab-content">
+                    <div class="section">
+                        <p class="section-title">관리자 메모</p>
+                        <textarea v-model="memoInput" class="memo-textarea" rows="6"
+                            placeholder="이 회원에 대한 메모를 입력하세요..." />
+                        <button class="btn btn-primary" style="margin-top: 10px" @click="saveMemo">
+                            메모 저장
+                        </button>
+                    </div>
 
-            <div class="section">
-                <p class="section-title">관리자 메모</p>
-                <textarea v-model="memoInput" class="memo-textarea" rows="6" placeholder="이 회원에 대한 메모를 입력하세요..." />
-                <button class="btn btn-primary" style="margin-top: 10px" @click="saveMemo">
-                    메모 저장
-                </button>
-            </div>
+                    <!-- 역할 변경 -->
+                    <div class="section">
+                        <p class="section-title">역할 변경</p>
+                        <div class="role-change-row">
+                            <select v-model="selectedRole" class="role-select">
+                                <option value="PRESIDENT">회장</option>
+                                <option value="EXECUTIVE">임원</option>
+                                <option value="MEMBER">회원</option>
+                            </select>
+                            <button class="btn btn-outline" @click="changeRole">변경</button>
+                        </div>
+                        <p class="role-changed-info" v-if="member.roleChangedAt">
+                            마지막 변경: {{ formatDate(member.roleChangedAt) }}
+                            <template v-if="member.roleChangedBy"> · {{ member.roleChangedBy }}님</template>
+                        </p>
+                    </div>
 
-            <!-- 역할 변경 -->
-            <div class="section">
-                <p class="section-title">역할 변경</p>
-                <div class="role-change-row">
-                    <select v-model="selectedRole" class="role-select">
-                        <option value="PRESIDENT">회장</option>
-                        <option value="EXECUTIVE">임원</option>
-                        <option value="MEMBER">회원</option>
-                    </select>
-                    <button class="btn btn-outline" @click="changeRole">변경</button>
+                    <!-- 회원 상태 변경 -->
+                    <div class="section danger-section">
+                        <p class="section-title">회원 상태</p>
+                        <div class="danger-actions">
+                            <button class="btn btn-danger" @click="$emit('expel', member.clubMemberId)">
+                                강퇴 처리
+                            </button>
+                            <button v-if="member.status === 'APPROVED'" class="btn btn-warning"
+                                @click="$emit('withdraw', member.clubMemberId)">
+                                탈퇴 처리
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
-                <p class="role-changed-info" v-if="member.roleChangedAt">
-                    마지막 변경: {{ formatDate(member.roleChangedAt) }}
-                    <template v-if="member.roleChangedBy"> · {{ member.roleChangedBy }}님</template>
-                </p>
+
             </div>
-
-            <!-- 회원 상태 변경 -->
-            <div class="section danger-section">
-                <p class="section-title">회원 상태</p>
-                <div class="danger-actions">
-                    <button class="btn btn-danger" @click="$emit('expel', member.clubMemberId)">
-                        강퇴 처리
-                    </button>
-                    <button v-if="member.status === 'APPROVED'" class="btn btn-warning"
-                        @click="$emit('withdraw', member.clubMemberId)">
-                        탈퇴 처리
-                    </button>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
+        </template>
+        <template #footer></template>
+    </BaseModal>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useUiStore } from '@/stores/ui'
 import ClubBadge from '@/components/club/ClubBadge.vue'
 import defaultLogo from '@/assets/AntLogo.png'
 
 // ── Props & Emits ─────────────────────────────────────
 const props = defineProps({
-    member: {
-        type: Object,
-        required: true,
-    },
+    modelValue: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['close', 'updated'])
+const isVisible = computed({
+    get: () => props.modelValue,
+    set: (value) => emit('update:modelValue', value)
+})
+
+const emit = defineEmits(['close', 'updateStatus', 'updateRole'])
 
 const ui = useUiStore()
 
@@ -321,52 +306,18 @@ const tabs = [
 ]
 const activeTab = ref('info')
 
-// ── 상태 ──────────────────────────────────────────────
-const memoInput = ref(props.member.memo ?? '')
-const selectedRole = ref(props.member.clubRole)
-
-// ── 메모 저장 ─────────────────────────────────────────
-async function saveMemo() {
-    try {
-        await updateClubMemberMemo(props.member.clubMemberId, memoInput.value)
-        await ui.alert('저장 완료', '메모가 저장되었습니다.')
-        emit('updated')
-    } catch {
-        await ui.alert('오류', '저장 중 문제가 발생했습니다.')
-    }
-}
-
-// ── 역할 변경 ─────────────────────────────────────────
-async function changeRole() {
-    if (selectedRole.value === props.member.clubRole) {
-        await ui.alert('알림', '현재와 동일한 역할입니다.')
-        return
-    }
-    const ok = await ui.confirm(
-        '역할 변경',
-        `${props.member.name} 회원의 역할을\n${roleLabel(selectedRole.value)}(으)로 변경하시겠습니까?`
-    )
-    if (!ok) return
-    try {
-        await changeClubMemberRole(props.member.clubMemberId, selectedRole.value)
-        await ui.alert('변경 완료', '역할이 변경되었습니다.')
-        emit('updated')
-    } catch {
-        await ui.alert('오류', '변경 중 문제가 발생했습니다.')
-    }
-}
-
 // ── 유틸 ──────────────────────────────────────────────
 function parseList(val) {
     if (!val) return []
     try { return JSON.parse(val) } catch { return val.split(',').map(s => s.trim()) }
 }
 
+function formatPhoneNumber(pn) {
+    return pn ? `${pn.slice(0, 3)}-${pn.slice(3, 7)}-${pn.slice(7)}` : '-'
+}
+
 function formatDate(d) { return d ? d.slice(0, 10) : '-' }
 
-function roleLabel(v) {
-    return { PRESIDENT: '회장', EXECUTIVE: '임원', MEMBER: '회원' }[v] ?? v
-}
 function enrollmentLabel(v) {
     return { ENROLLED: '재학', LEAVE: '휴학', GRADUATED: '졸업', EXPELLED: '제적' }[v] ?? '-'
 }

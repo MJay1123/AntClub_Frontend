@@ -28,7 +28,12 @@ const props = defineProps({
 
 // 타입별 라벨/색상/아이콘 맵
 const MAP = {
-  status: {
+  gender: {
+    MALE: {label: '남자', style: 'blue', icon: '♂️'},
+    FEMALE: {label: '여자', style: 'red', icon: '♀️'},
+    OTHER: {label: '미정', style: 'gray', icon: '❌'},
+  },
+  clubStatus: {
     ACTIVE:    { label: '활동중',  style: 'green',  icon: '' },
     INACTIVE:  { label: '비활동',  style: 'gray',   icon: '' },
     DISBANDED: { label: '해체',    style: 'red',    icon: '' },
@@ -36,7 +41,7 @@ const MAP = {
   role: {
     PRESIDENT: { label: '회장', style: 'yellow', icon: '👑' },
     EXECUTIVE: { label: '임원', style: 'blue',   icon: '⭐' },
-    MEMBER:    { label: '회원', style: 'gray',   icon: '' },
+    MEMBER:    { label: '회원', style: 'gray',   icon: '👤' },
   },
   joinType: {
     FREE:     { label: '자유가입', style: 'blue',   icon: '' },
@@ -51,10 +56,10 @@ const MAP = {
   },
   memberStatus: {
     PENDING:   { label: '대기중', style: 'yellow', icon: '⏳' },
-    APPROVED:  { label: '승인됨', style: 'green',  icon: '✓' },
-    REJECTED:  { label: '거절됨', style: 'red',    icon: '✕' },
-    WITHDRAWN: { label: '탈퇴',   style: 'gray',   icon: '' },
-    EXPELLED:  { label: '강퇴',   style: 'red',    icon: '' },
+    APPROVED:  { label: '승인됨', style: 'green',  icon: '✅' },
+    REJECTED:  { label: '거절됨', style: 'red',    icon: '❌' },
+    WITHDRAWN: { label: '탈퇴',   style: 'gray',   icon: '⚠️' },
+    EXPELLED:  { label: '강퇴',   style: 'red',    icon: '⛔' },
   },
   scheduleType: {
     REGULAR:     { label: '정기모임', style: 'blue',   icon: '' },

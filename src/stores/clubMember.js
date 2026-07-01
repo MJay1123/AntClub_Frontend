@@ -29,10 +29,23 @@ export const useClubMemberStore = defineStore('club-member', () => {
         }
     }
 
-    const fetchClubMember = async (clubId, memberId) => {
-        console.log('clubMember.js - fetchClubMember')
+    const fetchClubMemberByClubIdAndMemberId = async (clubId, memberId) => {
+        console.log('clubMember.js - fetchClubMemberByClubIdAndMemberId')
+        clubMember.value = null
         try {
             const response = await clubMemberApi.getClubMember(clubId, memberId)
+            console.log('response', response)
+            clubMember.value = response.data
+        } catch (error) {
+            console.log('error', error)
+        }
+    }
+
+    const fecthClubMemberByClubMemberId = async (clubMemberId) => {
+        console.log('clubMember.js - fecthClubMemberByClubMemberId')
+        clubMember.value = null
+        try {
+            const response = await clubMemberApi.getClubMemberByClubMemberId(clubMemberId)
             console.log('response', response)
             clubMember.value = response.data
         } catch (error) {
@@ -44,6 +57,7 @@ export const useClubMemberStore = defineStore('club-member', () => {
         console.log('clubMember.js - fetchMe')
         const memberId = localStorage.getItem('memberId')
         try {
+            myClubMember.value = null
             const response = await clubMemberApi.getClubMember(clubId, memberId)
             console.log('response', response)
             myClubMember.value = response.data
@@ -56,6 +70,8 @@ export const useClubMemberStore = defineStore('club-member', () => {
         clubMembers, approvedMembers, pendingMembers,
         presidentMember, executiveMembers,
         clubMember, myClubMember,
-        fetchClubMembers, fetchClubMember, fetchMe
+        fetchClubMembers,
+        fetchClubMemberByClubIdAndMemberId, fecthClubMemberByClubMemberId,
+        fetchMe
     }
 })
