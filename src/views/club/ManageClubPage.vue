@@ -63,7 +63,7 @@ const fetchData = async () => {
   const clubId = route.params.clubId
   const memberId = localStorage.getItem('memberId')
   if(!club.value) await clubStore.fetchClub(clubId)
-  if(!clubMember.value) await clubMemberStore.fetchClubMember(clubId, memberId)
+  if(!clubMember.value) await clubMemberStore.fetchClubMemberByClubIdAndMemberId(clubId, memberId)
   if(!clubMembers.value) await clubMemberStore.fetchClubMembers(clubId)
 }
 

@@ -27,21 +27,6 @@
       </div>
     </div>
 
-    <div class="toolbar">
-      <input v-model="searchKeyword" placeholder="이름, 학번 검색" class="search-input" @input="onSearch" />
-      <select v-model="filterRole" @change="loadMembers">
-        <option value="">전체 역할</option>
-        <option value="PRESIDENT">회장</option>
-        <option value="EXECUTIVE">임원</option>
-        <option value="MEMBER">회원</option>
-      </select>
-      <select v-model="filterStatus" @change="loadMembers">
-        <option value="APPROVED">승인됨</option>
-        <option value="PENDING">대기중</option>
-        <option value="WITHDRAWN">탈퇴</option>
-      </select>
-    </div>
-
     <div v-if="pendingMembers.length" class="pending-section">
       <h3>⏳ 가입 대기 ({{ pendingMembers?.length }}명)</h3>
       <div class="pending-list">
@@ -62,9 +47,35 @@
       :club-member="clubMemberStore.clubMember"
       @approve="approveJoin"
       @reject="rejectJoin"
+      @close="closePendingMemberDetail"
     />
 
-    <!-- ===== 회원 테이블 ===== -->
+    <button class="btn-primary shadow" @click="showInsertModal=true">회원 등록하기</button>
+
+    <MemberInsertModal
+      v-model="showInsertModal"
+      :club-id="route.params.clubId"
+      @success="closeMemberInsertModal"
+      @close="showInsertModal=false"
+    />
+
+    <div class="toolbar">
+      <input v-model="searchKeyword" placeholder="이름, 학번 검색" class="search-input" @input="onSearch" />
+      <select v-model="filterRole" @change="loadMembers">
+        <option value="">전체 역할</option>
+        <option value="PRESIDENT">회장</option>
+        <option value="EXECUTIVE">임원</option>
+        <option value="MEMBER">회원</option>
+      </select>
+      <select v-model="filterStatus" @change="loadMembers">
+        <option value="APPROVED">승인</option>
+        <option value="PENDING">대기</option>
+        <option value="REJECTED">거절</option>
+        <option value="WITHDRAW">탈퇴</option>
+        <option value="EXPELLED">추방</option>
+      </select>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -119,10 +130,11 @@
 
     <MemberDetailModal
       v-model="showMemberDetailModal"
-      @close="showMemberDetailModal=false"
-      @updateRole="updateRole"
       :member="memberStore.member"
-      :club-member="clubMemberStore.clubMember" />
+      :club-member="clubMemberStore.clubMember"
+      @updateRole="updateRole"
+      @close="closeMemberDetail"
+      />
 
     <BasePagination :current-page="page" :total-pages="totalPages" @change="onPageChange" />
 
@@ -137,6 +149,7 @@ import { storeToRefs } from 'pinia'
 import BasePagination from '@/components/common/BasePagination.vue'
 import MemberDetailModal from '@/components/club/MemberDetailModal.vue'
 import PendingMemberDetailModal from '@/components/club/PendingMemberDetailModal.vue'
+import MemberInsertModal from '@/components/club/MemberInsertModal.vue'
 import ClubBadge from '@/components/club/ClubBadge.vue'
 
 import { useClubMemberStore } from '@/stores/clubMember'
@@ -160,6 +173,7 @@ const filterRole = ref('')
 const filterStatus = ref('APPROVED')
 const showPendingMemberDetailModal = ref(false)
 const showMemberDetailModal = ref(false)
+const showInsertModal = ref(false)
 
 // ── 유틸 ──────────────────────────────────────────────
 const onPageChange = (p) => {
@@ -223,6 +237,16 @@ const rejectJoin = async (clubMemberId) => {
   }
 }
 
+const closePendingMemberDetail = async () => {
+  showPendingMemberDetailModal.value = false
+  await fetchData()
+}
+
+const closeMemberInsertModal = async () => {
+  showInsertModal.value = false
+  await fetchData()
+}
+
 const openMemberDetail = async(m) => {
   uiStore.isLoading = true 
 
@@ -244,6 +268,11 @@ const openMemberDetail = async(m) => {
 const updateRole = async(clubMemberId, clubRole) => {
   console.log('updateMember')
   await clubMemberApi.updateRole(clubMemberId, {clubRole})
+  showMemberDetailModal.value = false
+  await fetchData()
+}
+
+const closeMemberDetail = async() => {
   showMemberDetailModal.value = false
   await fetchData()
 }

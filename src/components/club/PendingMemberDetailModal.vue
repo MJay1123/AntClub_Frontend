@@ -75,8 +75,8 @@
         <template #footer>
             <button class="btn btn-outline" @click="isVisible = false">닫기</button>
             <div class="action-buttons">
-                <button class="btn btn-danger" @click="$emit('reject', clubMember?.clubMemberId)">거절</button>
-                <button class="btn btn-primary" @click="$emit('approve', clubMember?.clubMemberId)">승인</button>
+                <button class="btn btn-danger" @click="emit('reject', clubMember?.clubMemberId)">거절</button>
+                <button class="btn btn-primary" @click="emit('approve', clubMember?.clubMemberId)">승인</button>
             </div>
         </template>
 
@@ -94,7 +94,7 @@ const props = defineProps({
     clubMember: { type: Object },
 })
 
-const emit = defineEmits(['update:modelValue', 'approve', 'reject'])
+const emit = defineEmits(['update:modelValue', 'approve', 'reject', 'close'])
 
 const isVisible = computed({
     get: () => props.modelValue,
