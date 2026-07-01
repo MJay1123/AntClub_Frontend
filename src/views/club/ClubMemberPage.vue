@@ -117,7 +117,12 @@
       <div v-if="clubMembers.length === 0" class="empty">회원이 없습니다.</div>
     </div>
 
-    <MemberDetailModal v-model="showMemberDetailModal" @close="showMemberDetailModal=false" @updated="fetchData" />
+    <MemberDetailModal
+      v-model="showMemberDetailModal"
+      @close="showMemberDetailModal=false"
+      @updateRole="updateRole"
+      :member="memberStore.member"
+      :club-member="clubMemberStore.clubMember" />
 
     <BasePagination :current-page="page" :total-pages="totalPages" @change="onPageChange" />
 
@@ -216,6 +221,31 @@ const rejectJoin = async (clubMemberId) => {
   } finally {
     uiStore.isLoading = false
   }
+}
+
+const openMemberDetail = async(m) => {
+  uiStore.isLoading = true 
+
+  try {
+    await clubMemberStore.fecthClubMemberByClubMemberId(m.clubMemberId) 
+    await memberStore.fetchMember(m.memberId)
+
+    showMemberDetailModal.value = true 
+    
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = '회원 상세 정보를 불러오지 못했습니다.'
+    console.error(error)
+  } finally {
+    uiStore.isLoading = false 
+  }
+}
+
+const updateRole = async(clubMemberId, clubRole) => {
+  console.log('updateMember')
+  await clubMemberApi.updateRole(clubMemberId, {clubRole})
+  showMemberDetailModal.value = false
+  await fetchData()
 }
 
 const fetchData = async () => {
