@@ -24,13 +24,7 @@
         </div>
 
         <div class="register-container">
-            <div v-if="authStore.error || submitError" class="alert alert-error">
-                <span>⚠️</span>
-                <span>{{ authStore.error || submitError }}</span>
-            </div>
-
             <form @submit.prevent="handleSubmit">
-
                 <div v-show="currentStep === 1" class="step-content">
                     <div class="step-header">
                         <h2>기본 계정 정보</h2>
@@ -42,9 +36,14 @@
                             <label class="form-label">
                                 📧 이메일 <span class="required">*</span>
                             </label>
-                            <input v-model="form.email" type="email" class="form-input"
-                                :class="{ 'input-error': errors.email }" placeholder="example@email.com" />
+                            <div class="input-with-button">
+                                <input v-model="form.email" type="email" class="form-input"
+                                    :class="{ 'input-error': errors.email }" placeholder="example@email.com" />
+                                <button v-if="!form.isEmailChecked" class="btn-primary check-btn" @click.prevent="handleCheckEmail">중복검사</button>
+                                <button v-else class="btn-secondary check-btn" :disabled="true">확인완료</button>
+                            </div>
                             <span v-if="errors.email" class="error-msg">{{ errors.email }}</span>
+
                         </div>
 
                         <div class="form-group full-width">
@@ -137,7 +136,8 @@
                             <select v-model="form.universityId" class="form-input"
                                 :class="{ 'input-error': errors.universityId }">
                                 <option value="">학교를 선택하세요</option>
-                                <option v-for="university in universities" :key="university.universityId" :value="university.universityId">
+                                <option v-for="university in universities" :key="university.universityId"
+                                    :value="university.universityId">
                                     {{ university.name }}
                                 </option>
                             </select>
@@ -162,7 +162,8 @@
                             <select v-model="form.departmentId" class="form-input"
                                 :class="{ 'input-error': errors.departmentId }" :disabled="!form.collegeId">
                                 <option value="">학과를 선택하세요</option>
-                                <option v-for="department in departments" :key="department.departmentId" :value="department.departmentId">
+                                <option v-for="department in departments" :key="department.departmentId"
+                                    :value="department.departmentId">
                                     {{ department.name }}
                                 </option>
                             </select>
@@ -268,8 +269,8 @@
                     <button v-if="currentStep < steps.length" type="button" class="btn-next" @click="nextStep">
                         다음 →
                     </button>
-                    <button v-else type="submit" class="btn-submit" :disabled="isSubmitting">
-                        <span v-if="isSubmitting" class="spinner">⟳</span>
+                    <button v-else type="submit" class="btn-submit" :disabled="uiStore.isLoading">
+                        <span v-if="uiStore.isLoading" class="spinner">⟳</span>
                         <span v-else>🐜 회원가입 완료</span>
                     </button>
                 </div>
@@ -287,7 +288,6 @@
 <script setup>
 import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { useSchoolStore } from '@/stores/school'
 import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
@@ -296,15 +296,12 @@ import { memberApi } from '@/api/restApi'
 import { ENROLLMENT_STATUS, ACTIVITY_PREFERENCE, MBTI_LIST } from '@/constants'
 
 const router = useRouter()
-const authStore = useAuthStore()
 const schoolStore = useSchoolStore()
 const uiStore = useUiStore()
 
 const currentStep = ref(1)
 const showPassword = ref(false)
 const showPasswordConfirm = ref(false)
-const isSubmitting = ref(false)
-const submitError = ref('')
 
 const steps = [
     { id: 1, label: '계정 정보' },
@@ -316,6 +313,7 @@ const steps = [
 const form = reactive({
     // Step 1 - 계정
     email: '',
+    isEmailChecked: false,
     password: '',
     passwordConfirm: '',
 
@@ -332,7 +330,7 @@ const form = reactive({
     studentId: '',
     grade: 0,
     enrollmentStatus: 'ENROLLED',
-    
+
     profileImage: null,
     memberId: null,
     mbti: '',
@@ -359,25 +357,64 @@ const errors = reactive({
     studentId: ''
 })
 
+watch(() => form.email, () => {
+    if (form.isEmailChecked) {
+        form.isEmailChecked = false
+    }
+    if (errors.email) {
+        errors.email = ''
+    }
+})
+
+const handleCheckEmail = async () => {
+    if (!form.email) {
+        errors.email = '이메일을 입력해주세요.'
+        return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(form.email)) {
+        errors.email = '유효한 이메일 형식이 아닙니다.'
+        return
+    }
+
+    uiStore.isLoading = true // (작성하신 uiStore 사용 환경에 맞춰 유지)
+    try {
+        const response = await memberApi.getMemberByEmail(form.email)
+
+        if (response.data) {
+            errors.email = '이미 사용 중인 이메일입니다.'
+            form.isEmailChecked = false
+        } else {
+            errors.email = ''
+            form.isEmailChecked = true
+        }
+    } catch (error) {
+        errors.email = '중복 검사 중 서버 오류가 발생했습니다.'
+        console.error(error)
+    } finally {
+        uiStore.isLoading = false
+    }
+}
+
 // Store에서 목록 가져오기
-const { universities, colleges, departments, school } = storeToRefs(schoolStore)
+const { universities, colleges, departments } = storeToRefs(schoolStore)
 
 watch(() => form.universityId, async (newUniversityId) => {
-    
+
     form.collegeId = ''
     form.departmentId = ''
-    
+
     if (newUniversityId) {
         await schoolStore.fetchColleges(newUniversityId)
     } else {
-        colleges.value = [] 
+        colleges.value = []
         departments.value = []
     }
 })
 
 watch(() => form.collegeId, async (newCollegeId) => {
     form.departmentId = ''
-    if(newCollegeId) {
+    if (newCollegeId) {
         await schoolStore.fetchDepartments(newCollegeId)
     } else {
         departments.value = []
@@ -398,6 +435,10 @@ const validateStep = (step) => {
             errors.email = '올바른 이메일 형식이 아닙니다.'; valid = false
         }
 
+        if(!form.isEmailChecked) {
+            errors.email = '이메일 중복검사를 진행해주세요.'; valid = false
+        }
+
         if (!form.password) {
             errors.password = '비밀번호를 입력해주세요.'; valid = false
         } else if (form.password.length < 4) {
@@ -409,6 +450,7 @@ const validateStep = (step) => {
         } else if (form.password !== form.passwordConfirm) {
             errors.passwordConfirm = '비밀번호가 일치하지 않습니다.'; valid = false
         }
+
     }
 
     if (step === 2) {
@@ -460,8 +502,9 @@ const goToStep = (step) => {
 }
 
 const handleSubmit = async () => {
-    submitError.value = ''
-    isSubmitting.value = true
+
+    uiStore.isLoading = true
+    let isSuccess = false
 
     const request = {
         email: form.email,
@@ -490,18 +533,22 @@ const handleSubmit = async () => {
 
     try {
         await memberApi.createMember(request);
-        
-        console.log('가입 성공!!!')
 
-        await uiStore.alert('회원가입 성공', '회원가입되었습니다. 로그인해 주세요!')
-        
+        console.log('가입 성공!!!')
+        isSuccess = true
         router.push('/login')
-        
+
     } catch (error) {
         console.error('회원가입 에러:', error)
-        submitError.value = error.message || '서버와의 통신 중 오류가 발생했습니다.'
+        uiStore.isError = true
+        uiStore.errorMessage = error.message || '서버와의 통신 중 오류가 발생했습니다.'
     } finally {
-        isSubmitting.value = false
+        uiStore.isLoading = false
+        if (isSuccess) {
+            await uiStore.alert('회원가입 성공', '회원가입되었습니다. 로그인해 주세요!')
+        } else {
+            await uiStore.alert('회원가입 실패', '회원가입에 실패하였습니다...!')
+        }
     }
 }
 
@@ -695,6 +742,43 @@ onMounted(async () => {
 .required {
     color: #ef4444;
     margin-left: 2px;
+}
+
+.input-with-button {
+    display: flex;
+    gap: 8px;
+    /* input과 버튼 사이 간격 */
+    align-items: stretch;
+    /* input과 버튼의 높이를 동일하게 맞춤 */
+}
+
+/* input이 남은 영역을 모두 차지하도록 flex: 1 적용 */
+.input-with-button .form-input {
+    flex: 1;
+}
+
+/* 버튼 텍스트가 줄바꿈되지 않도록 고정 */
+.input-with-button .check-btn {
+    white-space: nowrap;
+    padding: 0 16px;
+}
+
+/* 중복 검사 성공 메시지 스타일 */
+.success-msg {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: #16a34a;
+    /* 초록색 */
+}
+
+/* 에러 메시지 스타일 (기존에 있다면 생략 가능) */
+.error-msg {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    color: #dc2626;
+    /* 빨간색 */
 }
 
 .input-wrapper {

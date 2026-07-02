@@ -22,7 +22,8 @@ export const clubMemberApi = {
 
 export const memberApi = {
     createMember: (data) => api.post("/member", data),
-    getMember: (memberId) => api.get(`/member/${memberId}`)
+    getMember: (memberId) => api.get(`/member/${memberId}`),
+    getMemberByEmail: (email) => api.get(`/member/email?email=${email}`)
 }
 
 export const scheduleApi = {
