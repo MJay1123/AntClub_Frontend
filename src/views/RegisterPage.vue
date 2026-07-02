@@ -134,27 +134,40 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label">🏫 학교 <span class="required">*</span></label>
-                            <select v-model="form.schoolId" class="form-input"
-                                :class="{ 'input-error': errors.schoolId }">
+                            <select v-model="form.universityId" class="form-input"
+                                :class="{ 'input-error': errors.universityId }">
                                 <option value="">학교를 선택하세요</option>
-                                <option v-for="school in schools" :key="school.schoolId" :value="school.schoolId">
-                                    {{ school.name }}
+                                <option v-for="university in universities" :key="university.universityId" :value="university.universityId">
+                                    {{ university.name }}
                                 </option>
                             </select>
-                            <span v-if="errors.schoolId" class="error-msg">{{ errors.schoolId }}</span>
+                            <span v-if="errors.universityId" class="error-msg">{{ errors.universityId }}</span>
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">📚 전공 <span class="required">*</span></label>
-                            <select v-model="form.majorId" class="form-input"
-                                :class="{ 'input-error': errors.majorId }" :disabled="!form.schoolId">
-                                <option value="">전공을 선택하세요</option>
-                                <option v-for="major in majors" :key="major.majorId" :value="major.majorId">
-                                    {{ major.name }}
+                            <label class="form-label">🔬 학부 <span class="required">*</span></label>
+                            <select v-model="form.collegeId" class="form-input"
+                                :class="{ 'input-error': errors.collegeId }">
+                                <option value="">학부를 선택하세요</option>
+                                <option v-for="college in colleges" :key="college.collegeId" :value="college.collegeId">
+                                    {{ college.name }}
                                 </option>
                             </select>
-                            <span v-if="errors.majorId" class="error-msg">{{ errors.majorId }}</span>
-                            <span v-if="!form.schoolId && !errors.majorId" class="help-text">학교를 먼저 선택해주세요.</span>
+                            <span v-if="errors.collegeId" class="error-msg">{{ errors.collegeId }}</span>
+                            <span v-if="!form.universityId" class="help-text">학교를 먼저 선택해주세요.</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">📚 학과(전공) <span class="required">*</span></label>
+                            <select v-model="form.departmentId" class="form-input"
+                                :class="{ 'input-error': errors.departmentId }" :disabled="!form.collegeId">
+                                <option value="">학과를 선택하세요</option>
+                                <option v-for="department in departments" :key="department.departmentId" :value="department.departmentId">
+                                    {{ department.name }}
+                                </option>
+                            </select>
+                            <span v-if="errors.departmentId" class="error-msg">{{ errors.departmentId }}</span>
+                            <span v-if="!form.universityId && !errors.collegeId" class="help-text">학부를 먼저 선택해주세요.</span>
                         </div>
 
                         <div class="form-group">
@@ -167,7 +180,7 @@
                         <div class="form-group full-width">
                             <label class="form-label">🎓 재학 상태 <span class="required">*</span></label>
                             <div class="radio-group-wrap">
-                                <label v-for="status in enrollmentStatuses" :key="status.value" class="radio-label"
+                                <label v-for="status in ENROLLMENT_STATUSES" :key="status.value" class="radio-label"
                                     :class="{ selected: form.enrollmentStatus === status.value }">
                                     <input type="radio" v-model="form.enrollmentStatus" :value="status.value" />
                                     <span>{{ status.label }}</span>
@@ -196,7 +209,7 @@
                             <label class="form-label">🧠 MBTI</label>
                             <select v-model="form.mbti" class="form-input">
                                 <option value="">선택하세요</option>
-                                <option v-for="mbti in mbtiList" :key="mbti" :value="mbti">{{ mbti }}</option>
+                                <option v-for="mbti in MBTI_LIST" :key="mbti" :value="mbti">{{ mbti }}</option>
                             </select>
                         </div>
 
@@ -221,7 +234,7 @@
                             <label class="form-label">📌 활동 선호도</label>
                             <select v-model="form.activityPreference" class="form-input">
                                 <option value="">선택하세요</option>
-                                <option v-for="pref in activityPreferences" :key="pref.value" :value="pref.value">
+                                <option v-for="pref in ACTIVITY_PREFERENCES" :key="pref.value" :value="pref.value">
                                     {{ pref.label }}
                                 </option>
                             </select>
@@ -276,15 +289,15 @@ import { ref, reactive, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useSchoolStore } from '@/stores/school'
-import { useMajorStore } from '@/stores/major' // 추가됨
 import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
 import { memberApi } from '@/api/restApi'
 
+import { ENROLLMENT_STATUSES, ACTIVITY_PREFERENCES, MBTI_LIST } from '@/constants'
+
 const router = useRouter()
 const authStore = useAuthStore()
 const schoolStore = useSchoolStore()
-const majorStore = useMajorStore()
 const uiStore = useUiStore()
 
 const currentStep = ref(1)
@@ -308,28 +321,28 @@ const form = reactive({
 
     // Step 2 - 개인
     name: '',
-    phoneNumber: '',
-    birthDate: '',
     gender: '',
+    birthDate: '',
+    phoneNumber: '',
 
     // Step 3 - 학교
-    schoolId: '',
-    majorId: '',
+    universityId: '',
+    collegeId: '',
+    departmentId: '',
     studentId: '',
     grade: 0,
     enrollmentStatus: 'ENROLLED',
-
-    // Step 4 - 프로필
+    
+    profileImage: null,
     memberId: null,
     mbti: '',
     interest: '',
     skill: '',
-    activityPreference: '', // null에서 빈 문자열로 변경 (select 바인딩용)
+    activityPreference: 'MORNING',
     introduction: '',
     motto: null,
     instagram: '',
     memo: '',
-    profileImage: null
 })
 
 const errors = reactive({
@@ -340,47 +353,34 @@ const errors = reactive({
     phoneNumber: '',
     birthDate: '',
     gender: '',
-    schoolId: '',
-    majorId: '',
+    universityId: '',
+    collegeId: '',
+    departmentId: '',
     studentId: ''
 })
 
 // Store에서 목록 가져오기
-const { schools } = storeToRefs(schoolStore)
-const { majors } = storeToRefs(majorStore) // 추가됨
+const { universities, colleges, departments, school } = storeToRefs(schoolStore)
 
-const enrollmentStatuses = [
-    { value: 'ENROLLED', label: '재학' },
-    { value: 'ON_LEAVE', label: '휴학' },
-    { value: 'GRADUATED', label: '졸업' },
-    { value: 'DROPPED_OUT', label: '자퇴' }
-]
-
-// 활동 선호도 목록 추가됨
-const activityPreferences = [
-    { value: 'MORNING', label: '오전' },
-    { value: 'AFTERNOON', label: '오후' },
-    { value: 'EVENING', label: '저녁' },
-    { value: 'WEEKEND', label: '주말' }
-]
-
-const mbtiList = [
-    'INTJ', 'INTP', 'ENTJ', 'ENTP',
-    'INFJ', 'INFP', 'ENFJ', 'ENFP',
-    'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
-    'ISTP', 'ISFP', 'ESTP', 'ESFP'
-]
-
-watch(() => form.schoolId, async (newSchoolId) => {
-    // 학교가 변경되면 기존에 선택했던 전공 초기화
-    form.majorId = ''
+watch(() => form.universityId, async (newUniversityId) => {
     
-    if (newSchoolId) {
-        // 선택된 학교의 전공들만 스토어에서 불러오기
-        await majorStore.fetchMajorsInSchool(newSchoolId)
+    form.collegeId = ''
+    form.departmentId = ''
+    
+    if (newUniversityId) {
+        await schoolStore.fetchColleges(newUniversityId)
     } else {
-        // 학교 선택이 해제된 경우 (옵셔널: 스토어에 목록 비우는 로직이 있다면 호출)
-        majors.value = [] 
+        colleges.value = [] 
+        departments.value = []
+    }
+})
+
+watch(() => form.collegeId, async (newCollegeId) => {
+    form.departmentId = ''
+    if(newCollegeId) {
+        await schoolStore.fetchDepartments(newCollegeId)
+    } else {
+        departments.value = []
     }
 })
 
@@ -428,11 +428,13 @@ const validateStep = (step) => {
 
     if (step === 3) {
         errors.schoolId = ''
-        errors.majorId = ''
+        errors.collegeId = ''
+        errors.departmentId = ''
         errors.studentId = ''
 
-        if (!form.schoolId) { errors.schoolId = '학교를 선택해주세요.'; valid = false }
-        if (!form.majorId) { errors.majorId = '전공을 선택해주세요.'; valid = false }
+        if (!form.universityId) { errors.universityId = '학교를 선택해주세요.'; valid = false }
+        if (!form.collegeId) { errors.collegeId = '학부를 선택해주세요.'; valid = false }
+        if (!form.departmentId) { errors.departmentId = '학과를 선택해주세요.'; valid = false }
         if (!form.studentId) { errors.studentId = '학번을 입력해주세요.'; valid = false }
     }
 
@@ -504,7 +506,7 @@ const handleSubmit = async () => {
 }
 
 onMounted(async () => {
-    await schoolStore.fetchSchools()
+    await schoolStore.fetchUniversities()
 })
 </script>
 

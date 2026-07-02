@@ -10,7 +10,9 @@ export const memberApi = {
 }
 
 export const schoolApi = {
-    getSchoolList: () => api.get("/school")
+    getUniversityList: () => api.get('/school/university'),
+    getCollegeList: (universityId) => api.get(`/school/university/${universityId}`),
+    getDepartmentList: (collegeId) => api.get(`school/college/${collegeId}`),
 }
 
 export const majorApi = {
