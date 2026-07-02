@@ -4,21 +4,6 @@ export const authApi = {
     login: (request) => api.post("/member/login", request),
 }
 
-export const memberApi = {
-    createMember: (data) => api.post("/member", data),
-    getMember: (memberId) => api.get(`/member/${memberId}`)
-}
-
-export const schoolApi = {
-    getUniversityList: () => api.get('/school/university'),
-    getCollegeList: (universityId) => api.get(`/school/university/${universityId}`),
-    getDepartmentList: (collegeId) => api.get(`school/college/${collegeId}`),
-}
-
-export const majorApi = {
-    getMajorListInSchool: (schoolId) => api.get(`/major/school/${schoolId}`)
-}
-
 export const clubApi = {
     getClubListAll: () => api.get('/club'),
     getMemberClubs: (memberId) => api.get(`/club/member/${memberId}`),
@@ -35,12 +20,26 @@ export const clubMemberApi = {
     updateRole: (clubMemberId, dto) => api.patch(`/club-member/${clubMemberId}/role`, dto),
 }
 
+export const memberApi = {
+    createMember: (data) => api.post("/member", data),
+    getMember: (memberId) => api.get(`/member/${memberId}`)
+}
+
+export const scheduleApi = {
+    getSchedules: (clubId) => api.get(`/schedule/club/${clubId}`),
+    getSemesterSchedules: (clubId, semesterId) => api.get(`/schedule/club/${clubId}/semester/${semesterId}`),
+    getSchedule: (scheduleId) => api.get(`/schedule/${scheduleId}`),
+}
+
+export const schoolApi = {
+    getUniversityList: () => api.get('/school/university'),
+    getCollegeList: (universityId) => api.get(`/school/university/${universityId}`),
+    getDepartmentList: (collegeId) => api.get(`school/college/${collegeId}`),
+}
+
 export const semesterApi = {
     getSemesters: (clubId) => api.get(`/semester/club/${clubId}`),
     getSemester: (semesterId) => api.get(`/semester/${semesterId}`)
 }
 
-export const scheduleApi = {
-    
-}
 

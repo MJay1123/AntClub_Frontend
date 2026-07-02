@@ -2,13 +2,17 @@ import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { authApi } from "@/api/restApi";
 import { memberApi } from "@/api/restApi";
+import { useUiStore } from "./ui";
+
+const uiStore = useUiStore()
 
 export const useAuthStore = defineStore("auth", () => {
-  const userInfo = ref(null);
-  const isLoggedIn = computed(() => userInfo.value !== null);
+  const myInfo = ref(null);
+  const isLoggedIn = computed(() => myInfo.value !== null);
 
   const login = async (request) => {
     console.log('auth.js - login')
+    uiStore.isLoading = true
     try {
       const response = await authApi.login(request)
       const memberId = response.data.memberId
@@ -16,25 +20,29 @@ export const useAuthStore = defineStore("auth", () => {
 
       const expireTime = Date.now() + 60 * 60 * 1000;
       localStorage.setItem('expireTime', expireTime.toString())
-      
-      await fetchLoginInfo()
-
     } catch (error) {
       console.log('error', error)
+      throw error
+    } finally {
+      uiStore.isLoading = false
     }
   };
 
   const logout = async () => {
     console.log('auth.js - logout')
-    userInfo.value = null;
+    myInfo.value = null;
     localStorage.removeItem("memberId");
   };
 
   const fetchLoginInfo = async () => {
     console.log('auth.js - fetchLoginInfo')
+    uiStore.isLoading = true
+    myInfo.value = null
+    const memberId = localStorage.getItem('memberId')
     const expireTime = Number(localStorage.getItem("expireTime"));
-    if(!expireTime) {
+    if(!memberId || !expireTime) {
       localStorage.removeItem('memberId')
+      localStorage.removeItem('expireTime')
       return
     }
     if(Date.now() >= expireTime){
@@ -42,24 +50,23 @@ export const useAuthStore = defineStore("auth", () => {
       localStorage.removeItem('memberId')
       localStorage.removeItem('expireTime')
     }
-    const memberId = localStorage.getItem('memberId')
-    if(!memberId) {
-      return
-    }
     try {
       const response = await memberApi.getMember(memberId)
-      userInfo.value = response.data
+      myInfo.value = response.data
 
       const expireTime = Date.now() + 60 * 60 * 1000;
       localStorage.setItem('expireTime', expireTime.toString())
       
     } catch (error) {
       console.log('error', error)
+      throw error
+    } finally {
+      uiStore.isLoading = false
     }
   }
 
   return {
-    userInfo, isLoggedIn,
+    myInfo, isLoggedIn,
     login, logout, fetchLoginInfo
   }
 

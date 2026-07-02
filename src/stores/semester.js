@@ -1,6 +1,9 @@
 import { defineStore } from "pinia"
 import { semesterApi } from "@/api/restApi"
 import { ref } from "vue"
+import { useUiStore } from "./ui"
+
+const uiStore = useUiStore()
 
 export const useSemesterStore = defineStore('semester', () => {
     const semesters = ref([])
@@ -9,6 +12,8 @@ export const useSemesterStore = defineStore('semester', () => {
 
     const fetchSemesters = async (clubId) => {
         console.log('semester.js - fetchSemesters')
+        uiStore.isLoading = true
+        semesters.value = []
         try {
             const response = await semesterApi.getSemesters(clubId)
             console.log('response', response)
@@ -17,17 +22,25 @@ export const useSemesterStore = defineStore('semester', () => {
             console.log('currentSemester', currentSemester.value)
         } catch (error) {
             console.log('error', error)
+            throw error
+        } finally {
+            uiStore.isLoading = false
         }
     }
 
     const fetchSemester = async (semesterId) => {
         console.log('semester.js - fetchSemester')
+        uiStore.isLoading = true
+        semester.value = null
         try {
             const response = semesterApi.getSemester(semesterId)
             console.log('response', response)
             semester.value = response.data
         } catch (error) {
             console.log('error', error)
+            throw error
+        } finally {
+            uiStore.isLoading = false
         }
     }
 

@@ -6,19 +6,6 @@ export const useUiStore = defineStore('ui', () => {
     const isError = ref(false)
     const errorMessage = ref('')
 
-    const startLoading = () => isLoading.value = true
-    const stopLoading = () => isLoading.value = false
-
-    const showError = (message) => {
-        errorMessage.value = message
-        isError.value = true
-    }
-
-    const closeError = () => {
-        errorMessage.value = null
-        isError.value = false
-    }
-
     const modal = ref({
         show: false,
         mode: 'alert', // 'alert' 또는 'confirm'
@@ -48,9 +35,7 @@ export const useUiStore = defineStore('ui', () => {
     }
 
     return {
-        isLoading, isError, errorMessage,
-        startLoading, stopLoading, showError, closeError,
-        modal,
-        alert, confirm, onConfirm, onCancel
+        isLoading, isError, errorMessage, modal,
+        openModal, alert, confirm, onConfirm, onCancel
     }
 })
