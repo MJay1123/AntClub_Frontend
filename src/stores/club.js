@@ -3,9 +3,9 @@ import { ref } from "vue";
 import { clubApi } from "@/api/restApi";
 import { useUiStore } from "./ui";
 
-const uiStore = useUiStore()
-
 export const useClubStore = defineStore("club", () => {
+    const uiStore = useUiStore()
+
     const allClubs = ref([])
 
     const myClubs = ref([])

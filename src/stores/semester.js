@@ -3,9 +3,10 @@ import { semesterApi } from "@/api/restApi"
 import { ref } from "vue"
 import { useUiStore } from "./ui"
 
-const uiStore = useUiStore()
 
 export const useSemesterStore = defineStore('semester', () => {
+    const uiStore = useUiStore()
+    
     const semesters = ref([])
     const currentSemester = ref(null)
     const semester = ref(null)

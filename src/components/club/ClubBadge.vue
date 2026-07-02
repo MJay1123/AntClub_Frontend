@@ -7,7 +7,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import * as CONSTANTS from './constants.js'
+import * as CONSTANTS from '@/constants'
 
 const props = defineProps({
   type: {

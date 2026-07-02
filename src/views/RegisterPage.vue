@@ -180,7 +180,7 @@
                         <div class="form-group full-width">
                             <label class="form-label">🎓 재학 상태 <span class="required">*</span></label>
                             <div class="radio-group-wrap">
-                                <label v-for="status in ENROLLMENT_STATUSES" :key="status.value" class="radio-label"
+                                <label v-for="status in ENROLLMENT_STATUS" :key="status.value" class="radio-label"
                                     :class="{ selected: form.enrollmentStatus === status.value }">
                                     <input type="radio" v-model="form.enrollmentStatus" :value="status.value" />
                                     <span>{{ status.label }}</span>
@@ -234,7 +234,7 @@
                             <label class="form-label">📌 활동 선호도</label>
                             <select v-model="form.activityPreference" class="form-input">
                                 <option value="">선택하세요</option>
-                                <option v-for="pref in ACTIVITY_PREFERENCES" :key="pref.value" :value="pref.value">
+                                <option v-for="pref in ACTIVITY_PREFERENCE" :key="pref.value" :value="pref.value">
                                     {{ pref.label }}
                                 </option>
                             </select>
@@ -293,7 +293,7 @@ import { useUiStore } from '@/stores/ui'
 import { storeToRefs } from 'pinia'
 import { memberApi } from '@/api/restApi'
 
-import { ENROLLMENT_STATUSES, ACTIVITY_PREFERENCES, MBTI_LIST } from '@/constants'
+import { ENROLLMENT_STATUS, ACTIVITY_PREFERENCE, MBTI_LIST } from '@/constants'
 
 const router = useRouter()
 const authStore = useAuthStore()

@@ -3,9 +3,10 @@ import { ref } from "vue";
 import { schoolApi } from "@/api/restApi";
 import { useUiStore } from "./ui";
 
-const uiStore = useUiStore()
 
 export const useSchoolStore = defineStore("school", () => {
+    const uiStore = useUiStore()
+    
     const universities = ref([])
     const colleges = ref([])
     const departments = ref([])

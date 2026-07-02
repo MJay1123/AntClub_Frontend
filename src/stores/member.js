@@ -3,9 +3,10 @@ import { memberApi } from "@/api/restApi"
 import { ref } from "vue"
 import { useUiStore } from "./ui"
 
-const uiStore = useUiStore()
 
 export const useMemberStore = defineStore('member', () => {
+    const uiStore = useUiStore()
+    
     const member = ref(null)
 
     const fetchMember = async (memberId) => {

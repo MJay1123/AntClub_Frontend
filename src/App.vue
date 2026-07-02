@@ -4,8 +4,6 @@
   </header>
   
   <main>
-    <LoadingModal v-if="isLoading" :is-loading="isLoading"/>
-    <ErrorModal v-else-if="isError" :is-error="isError" :error-message="errorMessage" @retry="alertDevelopment" @close="isError = false"/>
     <div>
       <router-view v-slot="{ Component }">
         <transition name="page" mode="out-in">
@@ -13,6 +11,8 @@
         </transition>
       </router-view>
     </div>
+    <LoadingModal v-if="isLoading" :is-loading="isLoading"/>
+    <ErrorModal v-else-if="isError" :is-error="isError" :error-message="errorMessage" @retry="alertDevelopment" @close="isError = false"/>
 
     <NotificationModal
       v-if="modal.show"

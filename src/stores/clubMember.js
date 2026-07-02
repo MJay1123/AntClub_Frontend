@@ -3,9 +3,10 @@ import { clubMemberApi } from "@/api/restApi"
 import { ref } from "vue"
 import { useUiStore } from "./ui"
 
-const uiStore = useUiStore()
 
 export const useClubMemberStore = defineStore('club-member', () => {
+    const uiStore = useUiStore()
+    
     const clubMembers = ref([])
     const approvedMembers = ref([])
     const pendingMembers = ref([])
