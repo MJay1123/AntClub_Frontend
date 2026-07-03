@@ -154,7 +154,6 @@ const validateForm = () => {
 const handleLogin = async () => {
   if (!validateForm()) return
 
-  uiStore.isLoading = true
   let isSuccess = false
 
   try {
@@ -170,8 +169,6 @@ const handleLogin = async () => {
   } catch (error) {
     uiStore.isError = true
     uiStore.errorMessage = error.message || '로그인 중 오류가 발생했습니다.'
-  } finally {
-    uiStore.isLoading = false
   }
 
   if(isSuccess){

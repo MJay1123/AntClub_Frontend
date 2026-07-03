@@ -94,20 +94,6 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="form-label">📱 전화번호 <span class="required">*</span></label>
-                            <input v-model="form.phoneNumber" type="tel" class="form-input"
-                                :class="{ 'input-error': errors.phoneNumber }" placeholder="01012345678" />
-                            <span v-if="errors.phoneNumber" class="error-msg">{{ errors.phoneNumber }}</span>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">🎂 생년월일 <span class="required">*</span></label>
-                            <input v-model="form.birthDate" type="date" class="form-input"
-                                :class="{ 'input-error': errors.birthDate }" />
-                            <span v-if="errors.birthDate" class="error-msg">{{ errors.birthDate }}</span>
-                        </div>
-
-                        <div class="form-group">
                             <label class="form-label">⚥ 성별 <span class="required">*</span></label>
                             <div class="radio-group">
                                 <label class="radio-label" :class="{ selected: form.gender === 'MALE' }">
@@ -121,6 +107,21 @@
                             </div>
                             <span v-if="errors.gender" class="error-msg">{{ errors.gender }}</span>
                         </div>
+
+                        <div class="form-group">
+                            <label class="form-label">🎂 생년월일 <span class="required">*</span></label>
+                            <input v-model="form.birthDate" type="date" class="form-input"
+                                :class="{ 'input-error': errors.birthDate }" />
+                            <span v-if="errors.birthDate" class="error-msg">{{ errors.birthDate }}</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">📱 전화번호 <span class="required">*</span></label>
+                            <input v-model="form.phoneNumber" type="tel" class="form-input"
+                                :class="{ 'input-error': errors.phoneNumber }" placeholder="01012345678" />
+                            <span v-if="errors.phoneNumber" class="error-msg">{{ errors.phoneNumber }}</span>
+                        </div>
+
                     </div>
                 </div>
 

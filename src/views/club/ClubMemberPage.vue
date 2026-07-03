@@ -100,14 +100,10 @@
                 {{ m.name || '이름 없음' }}
               </div>
             </td>
-            <td>
-              <ClubBadge type="gender" :value="m.gender" />
-            </td>
+            <td><ClubBadge type="gender" :value="m.gender" /></td>
             <td>{{ m.studentId || '학번 없음' }}</td>
-            <td>{{ m.majorName || '전공 없음' }}</td>
-            <td>
-              <ClubBadge type="role" :value="m.clubRole" />
-            </td>
+            <td>{{ m.departmentName || '전공 없음' }}</td>
+            <td><ClubBadge type="role" :value="m.clubRole" /></td>
             <td><ClubBadge type="memberStatus" :value="m.status"/></td>
             <td>{{ formatDate(m.joinDate) }}</td>
             <td>{{ m.appliedSchedules }}</td>
@@ -248,13 +244,12 @@ const closeMemberInsertModal = async () => {
 }
 
 const openMemberDetail = async(m) => {
-  uiStore.isLoading = true 
-
+  let isSuccess = false
   try {
-    await clubMemberStore.fecthClubMemberByClubMemberId(m.clubMemberId) 
+    await clubMemberStore.fecthClubMemberByClubMemberId(m.clubMemberId)
     await memberStore.fetchMember(m.memberId)
 
-    showMemberDetailModal.value = true 
+    isSuccess = true
     
   } catch (error) {
     uiStore.isError = true
@@ -262,6 +257,11 @@ const openMemberDetail = async(m) => {
     console.error(error)
   } finally {
     uiStore.isLoading = false 
+    if(isSuccess){
+      showMemberDetailModal.value = true 
+    } else {
+      uiStore.alert('회원 정보 불러오기 실패', '회원 정보를 불러오는데 실패했습니다.')
+    }
   }
 }
 

@@ -8,10 +8,10 @@
         </section>
 
         <!-- ===== 전체 동아리 탐색 ===== -->
-        <section class="section-explore">
+        <section class="section-explore" v-if="allClubs">
             <div class="section-title">
                 <h2>전체 동아리</h2>
-                <span class="count">{{ clubStore.allClubs.length }}개</span>
+                <span class="count">{{ allClubs.length }}개</span>
             </div>
 
             <!-- 검색 & 필터 -->
@@ -38,8 +38,8 @@
             </div>
 
             <div class="club-grid">
-                <ClubCard v-for="club in clubStore.allClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
-                <div v-if="clubStore.allClubs.length === 0" class="empty">
+                <ClubCard v-for="club in allClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
+                <div v-if="allClubs.length === 0" class="empty">
                     검색 결과가 없습니다.
                 </div>
             </div>
@@ -48,34 +48,30 @@
         </section>
 
         <!-- ===== 내 동아리 ===== -->
-        <section class="section-my">
+        <section class="section-my" v-if="myClubs.length">
             <div class="section-title">
                 <h2>내 동아리</h2>
-                <span class="count">{{ clubStore.myClubs.length }}개</span>
+                <span class="count">{{ myClubs.length }}개</span>
             </div>
 
-            <div v-if="loadingMy" class="loading-wrap">
-                <span>불러오는 중...</span>
-            </div>
-
-            <div v-else class="my-club-list">
+            <div class="my-club-list">
 
                 <!-- 가입 대기 중인 동아리 -->
-                <div v-if="clubStore.pendingClubs.length" class="pending-section">
+                <div v-if="pendingClubs.length" class="pending-section">
                     <h3>가입 대기 중 <span class="badge">{{ pendingClubs.length }}</span></h3>
                     <div class="club-grid">
-                        <ClubCard v-for="club in clubStore.pendingClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
+                        <ClubCard v-for="club in pendingClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
                     </div>
                 </div>
 
                 <!-- 가입된 동아리 -->
                 <div class="joined-section">
                     <h3>가입된 동아리</h3>
-                    <div v-if="clubStore.joinedClubs.length === 0" class="empty">
+                    <div v-if="joinedClubs.length === 0" class="empty">
                         가입된 동아리가 없습니다.
                     </div>
                     <div class="club-grid">
-                        <MyClubCard v-for="club in clubStore.joinedClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
+                        <MyClubCard v-for="club in joinedClubs" :key="club.clubId" :club="club" @click="goToClubDetail(club.clubId)" />
                     </div>
                 </div>
             </div>
@@ -86,14 +82,19 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+
 import { useRouter } from 'vue-router'
 import { useClubStore } from '@/stores/club'
+
 import ClubCard from '@/components/club/ClubCard.vue'
 import MyClubCard from '@/components/club/MyClubCard.vue'
 import BasePagination from '@/components/common/BasePagination.vue'
 
 const router = useRouter()
 const clubStore = useClubStore()
+
+const { allClubs, myClubs, joinedClubs, pendingClubs } = storeToRefs(clubStore)
 
 const allPage = ref(1)
 const allTotalPages = ref(1)
@@ -103,9 +104,6 @@ const searchKeyword = ref('')
 const filterCategory = ref('')
 const filterStatus = ref('')
 const filterJoinType = ref('')
-
-// ── 내 동아리 ─────────────────────────────────────────
-const loadingMy = ref(false)
 
 // ── 이벤트 핸들러 ─────────────────────────────────────
 let searchTimer = null
