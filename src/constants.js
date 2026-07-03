@@ -78,3 +78,6 @@ export const MBTI_LIST = [
     'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ',
     'ISTP', 'ISFP', 'ESTP', 'ESFP'
 ];
+
+export const getLabel = (list, value) =>
+    list.find(item => item.value === value)?.label ?? '-'
