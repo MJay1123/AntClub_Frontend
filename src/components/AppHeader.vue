@@ -71,25 +71,27 @@
                     <div class="nav-dropdown" @mouseenter="profileMenuOpen = true" @mouseleave="profileMenuOpen = false">
                         <button class="nav-item nav-profile-trigger">
                             <div class="avatar">
-                                <img v-if="userInfo?.profileImage"
-                                    :src="userInfo.profileImage" alt="프로필" />
-                                <span v-else class="avatar-fallback">
-                                    {{ userInfo?.name?.charAt(0) || "?" }}
-                                </span>
+                                <img v-if="myInfo?.profileImage" class="avatar-fallback"
+                                    :src="myInfo.profileImage" alt="프로필" />
+                                <img v-else class="avatar-fallback" 
+                                    :src="defaultLogo" />
                             </div>
-                            <span>{{ userInfo?.name || "내 정보" }}</span>
+                            <span>{{ myInfo?.name || "내 정보" }}</span>
                             <span class="dropdown-arrow" :class="{ rotated: profileMenuOpen }">▾</span>
                         </button>
 
                         <transition name="dropdown">
                             <div v-if="profileMenuOpen" class="dropdown-menu dropdown-menu-right">
                                 <div class="dropdown-user-info">
-                                    <div class="user-avatar-lg">
-                                        {{ userInfo?.name?.charAt(0) || "?" }}
+                                    <div class="avatar">
+                                        <img v-if="myInfo?.profileImage" class="avatar-fallback"
+                                            :src="myInfo.profileImage" alt="프로필" />
+                                        <img v-else class="avatar-fallback" 
+                                            :src="defaultLogo" />
                                     </div>
                                     <div>
-                                        <p class="user-name">{{ userInfo?.name }}</p>
-                                        <p class="user-email">{{ userInfo?.email }}</p>
+                                        <p class="user-name">{{ myInfo?.name }}</p>
+                                        <p class="user-email">{{ myInfo?.email }}</p>
                                     </div>
                                 </div>
                                 <div class="dropdown-divider" />
@@ -209,6 +211,8 @@ import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useUiStore } from "@/stores/ui";
 
+import defaultLogo from '@/assets/AntLogo.png'
+
 const authStore = useAuthStore()
 const uiStore = useUiStore()
 
@@ -220,7 +224,7 @@ const clubMenuOpen = ref(false);
 const profileMenuOpen = ref(false);
 const mobileMenuOpen = ref(false);
 
-const { userInfo, isLoggedIn } = storeToRefs(authStore)
+const { myInfo, isLoggedIn } = storeToRefs(authStore)
 
 const isClubRoute = computed(() =>
     ["/clubs", "/members", "/dues", "/schedule", "/board"].some((p) => route.path.startsWith(p)),
