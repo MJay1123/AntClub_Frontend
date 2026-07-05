@@ -1,18 +1,15 @@
 <template>
   <div class="club-schedule-page">
 
-    <!-- ===== 상단 툴바 ===== -->
     <div class="toolbar">
       <div class="toolbar-left">
-        <!-- 학기 선택 -->
-        <select v-model="selectedSemesterId" @change="loadSchedules" class="semester-select">
-          <option v-for="sem in semesters" :key="sem.semesterId" :value="sem.semesterId">
-            {{ sem.year }}년 {{ termLabel(sem.term) }}
+        <select v-model="semesters.length" class="semester-select">
+          <option v-for="sem in semesters" :key="sem.semesterId" :value="sem.semesterId" @change="fetchSemester(sem.semesterId)">
+            {{ sem.year }}년 {{ sem.term }}
             <template v-if="sem.isCurrent"> (현재)</template>
           </option>
         </select>
 
-        <!-- 뷰 전환 -->
         <div class="view-toggle">
           <button :class="{ active: viewMode === 'list' }" @click="viewMode = 'list'">
             ☰ 목록
@@ -25,7 +22,7 @@
 
       <div class="toolbar-right">
         <!-- 필터 -->
-        <select v-model="filterType" @change="loadSchedules" class="filter-select">
+        <select v-model="filterType" @change="fetchSemesterSchedules" class="filter-select">
           <option value="">전체 유형</option>
           <option value="REGULAR">정기모임</option>
           <option value="SPECIAL">특별활동</option>
@@ -34,7 +31,7 @@
           <option value="PARTY">회식</option>
           <option value="ETC">기타</option>
         </select>
-        <select v-model="filterStatus" @change="loadSchedules" class="filter-select">
+        <select v-model="filterStatus" @change="fetchSemesterSchedules" class="filter-select">
           <option value="">전체 상태</option>
           <option value="SCHEDULED">예정</option>
           <option value="ONGOING">진행중</option>
@@ -42,12 +39,7 @@
           <option value="CANCELLED">취소</option>
         </select>
 
-        <!-- 일정 생성 버튼 (임원 이상) -->
-        <button
-          v-if="isExecutiveAbove"
-          class="btn btn-primary"
-          @click="openCreateModal"
-        >
+        <button class="btn btn-primary" @click="openCreateModal">
           + 일정 추가
         </button>
       </div>
@@ -79,23 +71,20 @@
 
     <!-- ===== 목록 뷰 ===== -->
     <div v-if="viewMode === 'list'" class="list-view">
-      <div v-if="loading" class="loading">불러오는 중...</div>
 
-      <template v-else>
-        <div v-if="schedules.length === 0" class="empty">등록된 일정이 없습니다.</div>
+      <template v-if=semesterSchedules>
+        <div v-if="semesterSchedules.length === 0" class="empty">등록된 일정이 없습니다.</div>
 
         <div
-          v-for="schedule in schedules"
+          v-for="schedule in semesterSchedules"
           :key="schedule.scheduleId"
           class="schedule-item"
           :class="`status-${schedule.status.toLowerCase()}`"
-          @click="openDetailModal(schedule)"
+          @click="openDetailModal(schedule.scheduleId)"
         >
           <!-- 왼쪽: 날짜 -->
           <div class="schedule-date">
-            <span class="date-month">{{ formatMonth(schedule.startedAt) }}</span>
-            <span class="date-day">{{ formatDay(schedule.startedAt) }}</span>
-            <span class="date-weekday">{{ formatWeekday(schedule.startedAt) }}</span>
+            <span class="date-day">{{ formatDate(schedule.startedAt) }}</span>
           </div>
 
           <!-- 중간: 내용 -->
@@ -108,25 +97,22 @@
             <h3 class="schedule-title">{{ schedule.title }}</h3>
             <div class="schedule-meta">
               <span v-if="schedule.location">📍 {{ schedule.location }}</span>
-              <span>🕐 {{ formatTime(schedule.startedAt) }} ~ {{ formatTime(schedule.endedAt) }}</span>
+              <span>🕐 {{ formatDatetime(schedule.startedAt) }} ~ {{ formatDatetime(schedule.endedAt) }}</span>
               <span v-if="schedule.maxParticipants">
                 👥 {{ schedule.currentParticipants ?? 0 }} / {{ schedule.maxParticipants }}명
               </span>
             </div>
           </div>
 
-          <!-- 오른쪽: 내 참여 상태 + 액션 -->
           <div class="schedule-action" @click.stop>
-            <!-- 참여 신청 가능한 경우 -->
             <template v-if="schedule.status === 'SCHEDULED'">
               <template v-if="!schedule.myParticipation">
                 <button
                   class="btn btn-primary sm"
-                  :disabled="isDeadlinePassed(schedule.applyDeadline)"
                   @click="applySchedule(schedule)"
                 >
-                  {{ isDeadlinePassed(schedule.applyDeadline) ? '마감' : '참여 신청' }}
-                </button>
+                  신청하기
+                </button>만료 시간 : {{ formatDatetime(schedule.applyDeadline) }}
               </template>
               <template v-else>
                 <span class="applied-label">✅ 신청완료</span>
@@ -139,7 +125,6 @@
               </template>
             </template>
 
-            <!-- 진행중: 출석 체크 -->
             <template v-else-if="schedule.status === 'ONGOING'">
               <button
                 v-if="schedule.myParticipation && !schedule.myParticipation.isAttended"
@@ -156,16 +141,13 @@
               </span>
             </template>
 
-            <!-- 완료: 참여 여부 표시 -->
             <template v-else-if="schedule.status === 'COMPLETED'">
               <span v-if="schedule.myParticipation?.isAttended" class="attended-label">✅ 참여</span>
               <span v-else-if="schedule.myParticipation" class="absent-label">❌ 불참</span>
               <span v-else class="no-apply-label">— 미신청</span>
             </template>
 
-            <!-- 임원 이상: 관리 버튼 -->
             <button
-              v-if="isExecutiveAbove"
               class="btn btn-outline sm icon-btn"
               @click="openEditModal(schedule)"
             >
@@ -178,7 +160,6 @@
       <BasePagination
         :current-page="page"
         :total-pages="totalPages"
-        @change="onPageChange"
       />
     </div>
 
@@ -232,238 +213,243 @@
     <BaseModal v-model="showDetailModal" size="lg">
       <template #title>일정 상세</template>
 
-      <div v-if="selectedSchedule" class="detail-modal">
+      <template #body>
+        <div v-if="schedule" class="detail-modal">
 
-        <!-- 상태 뱃지 -->
-        <div class="detail-badges">
-          <ClubBadge type="scheduleType"   :value="selectedSchedule.scheduleType" />
-          <ClubBadge type="scheduleStatus" :value="selectedSchedule.status" />
-        </div>
+          <!-- 상태 뱃지 -->
+          <div class="detail-badges">
+            <ClubBadge type="scheduleType"   :value="schedule.scheduleType" />
+            <ClubBadge type="scheduleStatus" :value="schedule.status" />
+          </div>
 
-        <!-- 제목 -->
-        <h2 class="detail-title">{{ selectedSchedule.title }}</h2>
+          <!-- 제목 -->
+          <h2 class="detail-title">{{ schedule.title }}</h2>
 
-        <!-- 정보 그리드 -->
-        <div class="detail-info-grid">
-          <div class="info-item">
-            <span class="info-label">📅 시작</span>
-            <span>{{ formatDatetime(selectedSchedule.startedAt) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">🏁 종료</span>
-            <span>{{ formatDatetime(selectedSchedule.endedAt) }}</span>
-          </div>
-          <div class="info-item">
-            <span class="info-label">📍 장소</span>
-            <span>
-              {{ selectedSchedule.location ?? '-' }}
-              <span v-if="selectedSchedule.locationDetail" class="text-gray">
-                ({{ selectedSchedule.locationDetail }})
-              </span>
-            </span>
-          </div>
-          <div class="info-item" v-if="selectedSchedule.locationUrl">
-            <span class="info-label">🗺️ 지도</span>
-            <a :href="selectedSchedule.locationUrl" target="_blank" class="link">지도 보기</a>
-          </div>
-          <div class="info-item">
-            <span class="info-label">👥 인원</span>
-            <span>
-              {{ selectedSchedule.currentParticipants ?? 0 }}명 신청
-              <template v-if="selectedSchedule.maxParticipants">
-                / 최대 {{ selectedSchedule.maxParticipants }}명
-              </template>
-            </span>
-          </div>
-          <div class="info-item" v-if="selectedSchedule.applyDeadline">
-            <span class="info-label">⏰ 신청마감</span>
-            <span :class="{ 'text-red': isDeadlinePassed(selectedSchedule.applyDeadline) }">
-              {{ formatDatetime(selectedSchedule.applyDeadline) }}
-            </span>
-          </div>
-          <div class="info-item" v-if="selectedSchedule.isTeamRequired">
-            <span class="info-label">🏃 팀 배정</span>
-            <span>팀당 {{ selectedSchedule.teamSize }}명</span>
-          </div>
-        </div>
-
-        <!-- 설명 -->
-        <div v-if="selectedSchedule.description" class="detail-desc">
-          <p class="info-label">📝 활동 내용</p>
-          <p class="desc-text">{{ selectedSchedule.description }}</p>
-        </div>
-
-        <!-- 취소 사유 -->
-        <div
-          v-if="selectedSchedule.status === 'CANCELLED' && selectedSchedule.cancelReason"
-          class="cancel-reason"
-        >
-          <p class="info-label">❌ 취소 사유</p>
-          <p>{{ selectedSchedule.cancelReason }}</p>
-        </div>
-
-        <!-- 참여자 목록 (임원 이상) -->
-        <div v-if="isExecutiveAbove" class="participants-section">
-          <p class="info-label">참여 신청자 ({{ participants.length }}명)</p>
-          <div class="participants-list">
-            <div
-              v-for="p in participants"
-              :key="p.clubMemberId"
-              class="participant-item"
-            >
-              <img :src="p.profileImage || '/default-avatar.png'" class="avatar-xs" />
-              <span class="p-name">{{ p.name }}</span>
-              <span class="p-dept text-gray">{{ p.department }}</span>
-              <span
-                class="p-status"
-                :class="p.isAttended ? 'text-green' : 'text-gray'"
-              >
-                {{ p.isAttended ? '✅ 출석' : '— 미확인' }}
-              </span>
-              <!-- 임원: 출석 수동 처리 -->
-              <button
-                v-if="isExecutiveAbove && selectedSchedule.status !== 'SCHEDULED'"
-                class="btn btn-outline xs"
-                @click="toggleAttendance(p)"
-              >
-                {{ p.isAttended ? '출석취소' : '출석처리' }}
-              </button>
+          <!-- 정보 그리드 -->
+          <div class="detail-info-grid">
+            <div class="info-item">
+              <span class="info-label">📅 시작</span>
+              <span>{{ formatDatetime(schedule.startedAt) }}</span>
             </div>
-            <div v-if="participants.length === 0" class="empty-sm">신청자가 없습니다.</div>
+            <div class="info-item">
+              <span class="info-label">🏁 종료</span>
+              <span>{{ formatDatetime(schedule.endedAt) }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">📍 장소</span>
+              <span>
+                {{ schedule.location ?? '-' }}
+                <span v-if="schedule.locationDetail" class="text-gray">
+                  ({{ schedule.locationDetail }})
+                </span>
+              </span>
+            </div>
+            <div class="info-item" v-if="schedule.locationUrl">
+              <span class="info-label">🗺️ 지도</span>
+              <a :href="schedule.locationUrl" target="_blank" class="link">지도 보기</a>
+            </div>
+            <div class="info-item">
+              <span class="info-label">👥 인원</span>
+              <span>
+                {{ schedule.currentParticipants ?? 0 }}명 신청
+                <template v-if="schedule.maxParticipants">
+                  / 최대 {{ schedule.maxParticipants }}명
+                </template>
+              </span>
+            </div>
+            <div class="info-item" v-if="schedule.applyDeadline">
+              <span class="info-label">⏰ 신청마감</span>
+              <span :class="{ 'text-red': schedule.applyDeadline }">
+                {{ formatDatetime(schedule.applyDeadline) }}
+              </span>
+            </div>
+            <div class="info-item" v-if="schedule.isTeamRequired">
+              <span class="info-label">🏃 팀 배정</span>
+              <span>팀당 {{ schedule.teamSize }}명</span>
+            </div>
           </div>
-        </div>
 
-      </div>
+          <!-- 설명 -->
+          <div v-if="schedule.description" class="detail-desc">
+            <p class="info-label">📝 활동 내용</p>
+            <p class="desc-text">{{ schedule.description }}</p>
+          </div>
+
+          <!-- 취소 사유 -->
+          <div
+            v-if="schedule.status === 'CANCELLED' && schedule.cancelReason"
+            class="cancel-reason"
+          >
+            <p class="info-label">❌ 취소 사유</p>
+            <p>{{ schedule.cancelReason }}</p>
+          </div>
+
+          <!-- 참여자 목록 (임원 이상) -->
+          <div class="participants-section">
+            <p class="info-label">참여 신청자 ({{ participants.length }}명)</p>
+            <div class="participants-list">
+              <div
+                v-for="p in participants"
+                :key="p.clubMemberId"
+                class="participant-item"
+              >
+                <img :src="p.profileImage || '/default-avatar.png'" class="avatar-xs" />
+                <span class="p-name">{{ p.name }}</span>
+                <span class="p-dept text-gray">{{ p.department }}</span>
+                <span
+                  class="p-status"
+                  :class="p.isAttended ? 'text-green' : 'text-gray'"
+                >
+                  {{ p.isAttended ? '✅ 출석' : '— 미확인' }}
+                </span>
+                <!-- 임원: 출석 수동 처리 -->
+                <button
+                  v-if="selectedSchedule.status !== 'SCHEDULED'"
+                  class="btn btn-outline xs"
+                  @click="toggleAttendance(p)"
+                >
+                  {{ p.isAttended ? '출석취소' : '출석처리' }}
+                </button>
+              </div>
+              <div v-if="participants.length === 0" class="empty-sm">신청자가 없습니다.</div>
+            </div>
+          </div>
+
+        </div>
+      </template>
 
       <template #footer>
         <button class="btn btn-outline" @click="showDetailModal = false">닫기</button>
         <button
-          v-if="isExecutiveAbove && selectedSchedule"
+          v-if="schedule"
           class="btn btn-outline"
-          @click="openEditModal(selectedSchedule); showDetailModal = false"
+          @click="openEditModal(schedule); showDetailModal = false"
         >
           수정
         </button>
       </template>
     </BaseModal>
 
-
-    <!-- ===== 일정 생성/수정 모달 ===== -->
     <BaseModal v-model="showFormModal" size="lg">
       <template #title>{{ isEditing ? '일정 수정' : '일정 추가' }}</template>
 
-      <div class="form-grid">
-        <div class="form-row full">
-          <label>제목 <span class="required">*</span></label>
-          <input v-model="form.title" placeholder="일정 제목을 입력하세요" />
-        </div>
+      <template #body>
+        <div class="form-grid">
+          <div class="form-row full">
+            <label>제목 <span class="required">*</span></label>
+            <input v-model="form.title" placeholder="일정 제목을 입력하세요" />
+          </div>
 
-        <div class="form-row">
-          <label>일정 유형 <span class="required">*</span></label>
-          <select v-model="form.scheduleType">
-            <option value="REGULAR">정기모임</option>
-            <option value="SPECIAL">특별활동</option>
-            <option value="COMPETITION">대회</option>
-            <option value="WORKSHOP">워크숍</option>
-            <option value="PARTY">회식</option>
-            <option value="ETC">기타</option>
-          </select>
-        </div>
+          <div class="form-row">
+            <label>일정 유형 <span class="required">*</span></label>
+            <select v-model="form.scheduleType">
+              <option value="REGULAR">정기모임</option>
+              <option value="SPECIAL">특별활동</option>
+              <option value="COMPETITION">대회</option>
+              <option value="WORKSHOP">워크숍</option>
+              <option value="PARTY">파티</option>
+              <option value="ETC">기타</option>
+            </select>
+          </div>
 
-        <div class="form-row">
-          <label>상태 <span class="required">*</span></label>
-          <select v-model="form.status">
-            <option value="SCHEDULED">예정</option>
-            <option value="ONGOING">진행중</option>
-            <option value="COMPLETED">완료</option>
-            <option value="CANCELLED">취소</option>
-          </select>
-        </div>
+          <div class="form-row">
+            <label>상태 <span class="required">*</span></label>
+            <select v-model="form.status">
+              <option value="SCHEDULED">예정</option>
+              <option value="ONGOING">진행중</option>
+              <option value="COMPLETED">완료</option>
+              <option value="CANCELLED">취소</option>
+            </select>
+          </div>
 
-        <div class="form-row">
-          <label>시작 일시 <span class="required">*</span></label>
-          <input v-model="form.startedAt" type="datetime-local" />
-        </div>
+          <div class="form-row">
+            <label>시작 일시 <span class="required">*</span></label>
+            <input v-model="form.startedAt" type="datetime-local" />
+          </div>
 
-        <div class="form-row">
-          <label>종료 일시</label>
-          <input v-model="form.endedAt" type="datetime-local" />
-        </div>
+          <div class="form-row">
+            <label>종료 일시</label>
+            <input v-model="form.endedAt" type="datetime-local" />
+          </div>
 
-        <div class="form-row">
-          <label>장소</label>
-          <input v-model="form.location" placeholder="장소명" />
-        </div>
+          <div class="form-row">
+            <label>장소</label>
+            <input v-model="form.location" placeholder="장소명" />
+          </div>
 
-        <div class="form-row">
-          <label>상세 장소</label>
-          <input v-model="form.locationDetail" placeholder="상세 주소" />
-        </div>
+          <div class="form-row">
+            <label>상세 장소</label>
+            <input v-model="form.locationDetail" placeholder="상세 주소" />
+          </div>
 
-        <div class="form-row full">
-          <label>지도 링크</label>
-          <input v-model="form.locationUrl" placeholder="https://..." />
-        </div>
+          <div class="form-row full">
+            <label>지도 링크</label>
+            <input v-model="form.locationUrl" placeholder="https://..." />
+          </div>
 
-        <div class="form-row full">
-          <label>활동 내용</label>
-          <textarea v-model="form.description" rows="3" placeholder="활동 내용을 입력하세요" />
-        </div>
+          <div class="form-row full">
+            <label>활동 내용</label>
+            <textarea v-model="form.description" rows="3" placeholder="활동 내용을 입력하세요" />
+          </div>
 
-        <div class="form-row">
-          <label>최대 참여 인원</label>
-          <input v-model.number="form.maxParticipants" type="number" placeholder="제한 없음" />
-        </div>
+          <div class="form-row">
+            <label>최대 참여 인원</label>
+            <input v-model.number="form.maxParticipants" type="number" placeholder="제한 없음" />
+          </div>
 
-        <div class="form-row">
-          <label>신청 마감</label>
-          <input v-model="form.applyDeadline" type="datetime-local" />
-        </div>
+          <div class="form-row">
+            <label>신청 마감</label>
+            <input v-model="form.applyDeadline" type="datetime-local" />
+          </div>
 
-        <div class="form-row full">
-          <label class="checkbox-label">
-            <input v-model="form.isTeamRequired" type="checkbox" />
-            팀 배정 필요
-          </label>
-        </div>
+          <div class="form-row full">
+            <label class="checkbox-label">
+              <input v-model="form.isTeamRequired" type="checkbox" />
+              팀 배정 필요
+            </label>
+          </div>
 
-        <div class="form-row" v-if="form.isTeamRequired">
-          <label>팀당 인원</label>
-          <input v-model.number="form.teamSize" type="number" placeholder="4" />
-        </div>
+          <div class="form-row" v-if="form.isTeamRequired">
+            <label>팀당 인원</label>
+            <input v-model.number="form.teamSize" type="number" placeholder="4" />
+          </div>
 
-        <!-- 출석 체크 설정 -->
-        <div class="form-section-title full">출석 체크 설정</div>
+          <!-- 출석 체크 설정 -->
+          <div class="form-section-title full">출석 체크 설정</div>
 
-        <div class="form-row">
-          <label>출석 코드</label>
-          <div class="input-with-btn">
-            <input v-model="form.checkInCode" placeholder="자동생성 가능" maxlength="10" />
-            <button class="btn btn-outline sm" type="button" @click="generateCode">생성</button>
+          <div class="form-row">
+            <label>출석 코드</label>
+            <div class="input-with-btn">
+              <input v-model="form.checkInCode" placeholder="자동생성 가능" maxlength="10" />
+              <button class="btn btn-outline sm" type="button" @click="generateCode">생성</button>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <label>출석 시작</label>
+            <input v-model="form.checkInStart" type="datetime-local" />
+          </div>
+
+          <div class="form-row">
+            <label>출석 마감</label>
+            <input v-model="form.checkInEnd" type="datetime-local" />
+          </div>
+
+          <!-- 취소 사유 (취소 상태일 때만) -->
+          <div class="form-row full" v-if="form.status === 'CANCELLED'">
+            <label>취소 사유</label>
+            <textarea v-model="form.cancelReason" rows="2" placeholder="취소 사유를 입력하세요" />
           </div>
         </div>
-
-        <div class="form-row">
-          <label>출석 시작</label>
-          <input v-model="form.checkInStart" type="datetime-local" />
-        </div>
-
-        <div class="form-row">
-          <label>출석 마감</label>
-          <input v-model="form.checkInEnd" type="datetime-local" />
-        </div>
-
-        <!-- 취소 사유 (취소 상태일 때만) -->
-        <div class="form-row full" v-if="form.status === 'CANCELLED'">
-          <label>취소 사유</label>
-          <textarea v-model="form.cancelReason" rows="2" placeholder="취소 사유를 입력하세요" />
-        </div>
-      </div>
+      </template>
 
       <template #footer>
         <button class="btn btn-outline" @click="showFormModal = false">취소</button>
-        <button class="btn btn-primary" @click="saveSchedule">
-          {{ isEditing ? '수정' : '추가' }}
+        <button v-if="isEditing" class="btn btn-primary" @click="updateRequest">
+          수정
+        </button>
+        <button v-else class="btn btn-primary" @click="createRequest">
+          추가
         </button>
       </template>
     </BaseModal>
@@ -497,19 +483,29 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute }                 from 'vue-router'
-import { useUiStore }               from '@/stores/ui'
+import { storeToRefs } from 'pinia'
+
 import ClubBadge      from '@/components/club/ClubBadge.vue'
 import BaseModal      from '@/components/common/BaseModal.vue'
 import BasePagination from '@/components/common/BasePagination.vue'
 
+import { useUiStore } from '@/stores/ui'
+import { useSemesterStore } from '@/stores/semester'
+import { useScheduleStore } from '@/stores/schedule'
+import { scheduleApi } from '@/api/restApi'
+
+import { formatDate, formatDatetime } from '@/utils/format'
 
 const route  = useRoute()
-const ui     = useUiStore()
-const clubId = computed(() => route.params.clubId)
+const uiStore = useUiStore()
+const semesterStore = useSemesterStore()
+const scheduleStore = useScheduleStore()
+
+const { semesters, currentSemester, semester } = storeToRefs(semesterStore) 
+const { semesterSchedules, schedule } = storeToRefs(scheduleStore)
+
 
 // ── 일정 목록 ─────────────────────────────────────────
-const schedules   = ref([])
-const loading     = ref(false)
 const page        = ref(1)
 const totalPages  = ref(1)
 const filterType   = ref('')
@@ -544,7 +540,7 @@ const calendarCells = computed(() => {
     const date     = new Date(calYear.value, calMonth.value - 1, d)
     const dateStr  = date.toISOString().slice(0, 10)
     const isToday  = dateStr === today.toISOString().slice(0, 10)
-    const dayScheds = schedules.value.filter(s =>
+    const dayScheds = semesterSchedules.value.filter(s =>
       s.startedAt?.slice(0, 10) === dateStr
     )
     cells.push({ key: `cur-${d}`, day: d, isCurrentMonth: true, isToday, schedules: dayScheds })
@@ -598,131 +594,67 @@ const defaultForm = () => ({
   checkInStart:    '',
   checkInEnd:      '',
   cancelReason:    '',
+  createdBy: localStorage.getItem('memberId')
 })
 const form = ref(defaultForm())
 
-// ── API ───────────────────────────────────────────────
-async function loadSemesters() {
-  const res        = await fetchSemesters(clubId.value)
-  semesters.value  = res.data
-  const current    = res.data.find(s => s.isCurrent) ?? res.data[0]
-  if (current) {
-    selectedSemesterId.value = current.semesterId
-    await loadSchedules()
-  }
-}
-
-async function loadSchedules() {
-  loading.value = true
-  try {
-    const res = await fetchSchedules(clubId.value, {
-      semesterId: selectedSemesterId.value,
-      page:       page.value,
-      type:       filterType.value,
-      status:     filterStatus.value,
-    })
-    schedules.value  = res.data.content
-    totalPages.value = res.data.totalPages
-    stats.value      = res.data.stats
-  } finally {
-    loading.value = false
-  }
-}
-
-// 일정 저장 (생성/수정)
-async function saveSchedule() {
-  if (!form.value.title) {
-    await ui.alert('입력 오류', '제목을 입력해주세요.')
-    return
-  }
-  if (!form.value.startedAt) {
-    await ui.alert('입력 오류', '시작 일시를 입력해주세요.')
-    return
-  }
-
-  try {
-    if (isEditing.value) {
-      await updateSchedule(selectedSchedule.value.scheduleId, {
-        ...form.value,
-        semesterId: selectedSemesterId.value,
-      })
-      await ui.alert('수정 완료', '일정이 수정되었습니다.')
-    } else {
-      await createSchedule(clubId.value, {
-        ...form.value,
-        semesterId: selectedSemesterId.value,
-      })
-      await ui.alert('추가 완료', '일정이 추가되었습니다.')
-    }
-    showFormModal.value = false
-    await loadSchedules()
-  } catch {
-    await ui.alert('오류', '처리 중 문제가 발생했습니다.')
-  }
-}
-
-// 참여 신청
-async function applySchedule(schedule) {
-  const ok = await ui.confirm('참여 신청', `${schedule.title}에 참여 신청하시겠습니까?`)
-  if (!ok) return
-  await applyToSchedule(schedule.scheduleId)
-  await ui.alert('신청 완료', '참여 신청이 완료되었습니다.')
-  await loadSchedules()
-}
-
-// 참여 취소
-async function cancelSchedule(schedule) {
-  const ok = await ui.confirm('신청 취소', '참여 신청을 취소하시겠습니까?')
-  if (!ok) return
-  await cancelFromSchedule(schedule.scheduleId)
-  await loadSchedules()
-}
-
-// 출석 체크
-function openCheckInModal(schedule) {
-  selectedSchedule.value = schedule
-  checkInCode.value      = ''
-  checkInError.value     = ''
-  showCheckInModal.value = true
-}
-
-async function submitCheckIn() {
-  if (!checkInCode.value) {
-    checkInError.value = '출석 코드를 입력해주세요.'
-    return
-  }
-  try {
-    await checkInSchedule(selectedSchedule.value.scheduleId, checkInCode.value)
-    showCheckInModal.value = false
-    await ui.alert('출석 완료', '출석 처리가 완료되었습니다.')
-    await loadSchedules()
-  } catch {
-    checkInError.value = '출석 코드가 올바르지 않습니다.'
-  }
-}
-
-// 참여자 출석 수동 처리
-async function toggleAttendance(participant) {
-  await updateAttendance(
-    selectedSchedule.value.scheduleId,
-    participant.clubMemberId,
-    !participant.isAttended
-  )
-  // 참여자 목록 새로고침
-  const res      = await fetchParticipants(selectedSchedule.value.scheduleId)
-  participants.value = res.data
-}
-
 // ── 모달 열기 ─────────────────────────────────────────
+const openDetailModal = async (scheduleId) => {
+  await fetchSchedule(scheduleId)
+  showDetailModal.value = true
+}
+
+const fetchSchedule = async(scheduleId) => {
+  let isSuccess = false
+  try {
+    await scheduleStore.fetchSchedule(scheduleId)
+    showDetailModal.value = true
+    isSuccess = true
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '일정을 불러오는데 실패했습니다.'
+  } finally {
+    if(!isSuccess){
+      uiStore.alert('일정 정보 조회 실패', '일정 정보를 불러오지 못했습니다.')
+    }
+  }
+}
+
 function openCreateModal() {
   isEditing.value     = false
   form.value          = defaultForm()
   showFormModal.value = true
 }
 
+const createRequest = async() => {
+  await createSchedule();
+  await fetchSemesterSchedules();
+}
+
+const createSchedule = async () => {
+  uiStore.isLoading = true
+  let isSuccess = false
+  try {
+    form.value.clubId = route.params.clubId
+    form.value.semesterId = currentSemester.value.semesterId
+    await scheduleApi.createSchedule(form.value)
+    showFormModal.value = false
+    isSuccess = true
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '일정 생성에 실패했습니다.'
+  } finally {
+    uiStore.isLoading = false
+    if(isSuccess){
+      uiStore.alert('일정 생성 성공', '일정 생성에 성공했습니다.')
+    } else {
+      uiStore.alert('일정 생성 실패', '일정 생성에 실패했습니다.')
+    }
+  }
+}
+
 function openEditModal(schedule) {
   isEditing.value        = true
-  selectedSchedule.value = schedule
   form.value = {
     title:           schedule.title,
     description:     schedule.description     ?? '',
@@ -745,38 +677,86 @@ function openEditModal(schedule) {
   showFormModal.value = true
 }
 
-async function openDetailModal(schedule) {
-  selectedSchedule.value = schedule
-  showDetailModal.value  = true
-  if (isExecutiveAbove.value) {
-    const res      = await fetchParticipants(schedule.scheduleId)
-    participants.value = res.data
+const updateRequest = async() => {
+  await updateSchedule();
+  await fetchSemesterSchedules();
+}
+
+const updateSchedule = async () => {
+  uiStore.isLoading = true
+  let isSuccess = false
+  try {
+    const scheduleId = schedule.value.scheduleId
+    await scheduleApi.updateSchedule(scheduleId, form.value)
+    showFormModal.value = false
+    isSuccess = true
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '일정 수정에 실패했습니다.'
+  } finally {
+    uiStore.isLoading = false
+    if(isSuccess){
+      uiStore.alert('일정 수정 성공', '일정 수정에 성공했습니다.')
+    } else {
+      uiStore.alert('일정 수정 실패', '일정 수정에 실패했습니다.')
+    }
   }
 }
 
-// ── 유틸 ──────────────────────────────────────────────
-function generateCode() {
-  form.value.checkInCode = Math.random().toString(36).slice(2, 8).toUpperCase()
+const fetchSemesters = async() => {
+  let isSuccess = false
+  try {
+    const clubId = route.params.clubId
+    await semesterStore.fetchSemesters(clubId)
+    isSuccess = true
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '학기를 불러오는데 실패했습니다.'
+  } finally {
+    if(!isSuccess){
+      uiStore.alert('학기 정보 조회 실패', '학기 정보를 불러오지 못했습니다.')
+    }
+  }
 }
 
-function isDeadlinePassed(deadline) {
-  if (!deadline) return false
-  return new Date(deadline) < new Date()
+const fetchSemester = async(semesterId) => {
+  let isSuccess = false
+  try {
+    await semesterStore.fetchSemester(semesterId)
+    isSuccess = true
+  } catch (error){
+    uiStore.isError = true
+    uiStore.errorMessage = error.message || '학기를 불러오는데 실패했습니다.'
+  } finally {
+    if(!isSuccess){
+      uiStore.alert('학기 정보 조회 실패', '학기 정보를 불러오지 못했습니다.')
+    }
+  }
 }
 
-function onPageChange(p) {
-  page.value = p
-  loadSchedules()
+const fetchSemesterSchedules = async() => {
+  let isSuccess = false
+  try {
+    const clubId = route.params.clubId
+    const semesterId = currentSemester.value.semesterId
+    await scheduleStore.fetchSemesterSchedules(clubId, semesterId)
+    isSuccess = true
+  } catch (error) {
+    uiStore.isError = true
+    uiStore.errorMessage = error.mmessage || '일정을 불러오는데 실패했습니다.'
+  } finally {
+    if(!isSuccess){
+      uiStore.alert('일정 정보 조회 실패', '일정 정보를 불러오지 못했습니다.')
+    }
+  }
 }
 
-function termLabel(t)       { return { '1': '1학기', '2': '2학기', SUMMER: '여름', WINTER: '겨울' }[t] ?? t }
-function formatMonth(dt)    { return dt ? `${new Date(dt).getMonth() + 1}월` : '-' }
-function formatDay(dt)      { return dt ? new Date(dt).getDate() : '-' }
-function formatWeekday(dt)  { return dt ? ['일','월','화','수','목','금','토'][new Date(dt).getDay()] : '' }
-function formatTime(dt)     { return dt ? dt.slice(11, 16) : '-' }
-function formatDatetime(dt) { return dt ? dt.slice(0, 16).replace('T', ' ') : '-' }
+onMounted(async() => {
+  await fetchSemesters()
+  await fetchSemesterSchedules()
+  
+})
 
-onMounted(loadSemesters)
 </script>
 
 <style scoped>

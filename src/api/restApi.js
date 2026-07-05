@@ -30,6 +30,8 @@ export const scheduleApi = {
     getSchedules: (clubId) => api.get(`/schedule/club/${clubId}`),
     getSemesterSchedules: (clubId, semesterId) => api.get(`/schedule/club/${clubId}/semester/${semesterId}`),
     getSchedule: (scheduleId) => api.get(`/schedule/${scheduleId}`),
+    createSchedule: (request) => api.post('/schedule', request),
+    updateSchedule: (scheduleId, request) => api.patch(`/schedule/${scheduleId}`, request),
 }
 
 export const schoolApi = {

@@ -46,7 +46,7 @@ export const useScheduleStore = defineStore('schedule', () => {
     const fetchSchedule = async (scheduleId) => {
         console.log('schedule.js - fetchSchedule')
         uiStore.isLoading = true
-        schedule.value = []
+        schedule.value = null
         try {
             const response = await scheduleApi.getSchedule(scheduleId)
             console.log('response', response)

@@ -15,12 +15,12 @@ export const useSemesterStore = defineStore('semester', () => {
         console.log('semester.js - fetchSemesters')
         uiStore.isLoading = true
         semesters.value = []
+        currentSemester.value = null
         try {
             const response = await semesterApi.getSemesters(clubId)
             console.log('response', response)
             semesters.value = response.data
             currentSemester.value = response.data.find(s => s.isCurrent)
-            console.log('currentSemester', currentSemester.value)
         } catch (error) {
             console.log('error', error)
             throw error
