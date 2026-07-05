@@ -164,6 +164,8 @@ const handleLogin = async () => {
 
     await authStore.login(request)
 
+    await authStore.fetchLoginInfo();
+
     isSuccess = true
     
   } catch (error) {

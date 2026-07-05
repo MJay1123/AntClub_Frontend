@@ -33,6 +33,7 @@ export const useAuthStore = defineStore("auth", () => {
     console.log('auth.js - logout')
     myInfo.value = null;
     localStorage.removeItem("memberId");
+    localStorage.removeItem("expireTime");
   };
 
   const fetchLoginInfo = async () => {
