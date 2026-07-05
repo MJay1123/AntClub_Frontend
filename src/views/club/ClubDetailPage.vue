@@ -3,7 +3,7 @@
   <div class="club-detail-page">
 
     <!-- ===== 배너 ===== -->
-    <div class="banner" :style="club.bannerImage ? `background-image:url(${club.bannerImage})` : ''">
+    <div v-if="club" class="banner" :style="club.bannerImage ? `background-image:url(${club.bannerImage})` : ''">
 
       <button class="btn-back" @click="router.push('/club')">
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="back-icon">
@@ -53,14 +53,12 @@
       </div>
     </div>
 
-
-
     <div class="content-wrap">
 
       <main class="main-content">
 
         <div v-if="currentTab === 'info'" class="tab-content">
-          <section class="card">
+          <section v-if="club" class="card">
             <h2>동아리 소개</h2>
             <p class="description">{{ club.description || '등록된 소개글이 없습니다.' }}</p>
           </section>
@@ -143,7 +141,7 @@
       </main>
 
       <aside class="sidebar">
-        <section class="card action-card">
+        <section v-if="club" class="card action-card">
           <template v-if="myClubMember">
             <div v-if="myClubMember.status === 'APPROVED'" class="joined-badge">
               ✅ 회원 유형 : {{ getLabel(CLUB_ROLE, myClubMember.clubRole) }}
@@ -156,7 +154,7 @@
             </button>
           </template>
           
-          <template>
+          <template v-else>
             <p class="join-guide">가입 유형 : {{ getLabel(JOIN_TYPE, club.joinType) }}</p>
             <button class="btn btn-primary" :disabled="club.status !== 'ACTIVE'" @click="showModal=true">
               {{ club.status === 'ACTIVE' ? '가입 신청' : '가입 불가' }}
@@ -183,22 +181,24 @@
           </div>
         </section>
 
-        <section class="card" v-if="approvedMembers">
+        <section class="card">
           <h2>동아리 현황</h2>
-          <ul class="stat-list">
-            <li>
-              <span>전체 회원</span>
-              <strong>{{ approvedMembers.length || '-' }}명</strong>
-            </li>
-            <li>
-              <span>이번 학기 일정</span>
-              <strong>개발 중입니다...</strong>
-            </li>
-            <li>
-              <span>평균 참여율</span>
-              <strong>개발 중입니다...</strong>
-            </li>
-          </ul>
+          <div v-if="approvedMembers">
+            <ul class="stat-list">
+              <li>
+                <span>전체 회원</span>
+                <strong>{{ approvedMembers.length || '-' }}명</strong>
+              </li>
+              <li>
+                <span>이번 학기 일정</span>
+                <strong>개발 중입니다...</strong>
+              </li>
+              <li>
+                <span>평균 참여율</span>
+                <strong>개발 중입니다...</strong>
+              </li>
+            </ul>
+          </div>
         </section>
       </aside>
 
