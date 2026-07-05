@@ -138,68 +138,7 @@
                     </router-link>
                 </template>
             </nav>
-            
-            <button class="hamburger" @click="mobileMenuOpen = !mobileMenuOpen">
-                <span :class="{ open: mobileMenuOpen }"></span>
-                <span :class="{ open: mobileMenuOpen }"></span>
-                <span :class="{ open: mobileMenuOpen }"></span>
-            </button>
         </div>
-
-        <transition name="slide-down">
-            <div v-if="mobileMenuOpen" class="mobile-menu">
-                <router-link to="/" class="mobile-nav-item" active-class="nav-active" exact @click="mobileMenuOpen = false">
-                    🏠 홈
-                </router-link>
-
-                <template v-if="isLoggedIn">
-                    <div class="mobile-section">
-                        <p class="mobile-section-title">동아리 관리</p>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            📋 동아리 목록
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            ➕ 동아리 등록
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            👥 회원 관리
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            💰 회비 관리
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            📅 일정 관리
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            📋 게시판
-                        </router-link>
-                    </div>
-
-                    <div class="mobile-section">
-                        <p class="mobile-section-title">내 정보</p>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            👤 내 프로필
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            🏛️ 내 동아리
-                        </router-link>
-                        <router-link to="/" class="mobile-nav-item sub" @click="mobileMenuOpen = false">
-                            ⚙️ 설정
-                        </router-link>
-                    </div>
-                    <button class="mobile-logout-btn" @click="handleLogout">🚪 로그아웃</button>
-                </template>
-
-                <template v-else>
-                    <router-link to="/login" class="mobile-nav-item" active-class="nav-active" @click="mobileMenuOpen = false">
-                        🔑 로그인
-                    </router-link>
-                    <router-link to="/register" class="mobile-register-btn" @click="mobileMenuOpen = false">
-                        회원가입
-                    </router-link>
-                </template>
-            </div>
-        </transition>
     </header>
 </template>
 
@@ -582,34 +521,13 @@ onUnmounted(() => window.removeEventListener("scroll", handleScroll));
 
 /* ===== Hamburger ===== */
 .hamburger {
-    display: none;
+    /* display: none; */
     flex-direction: column;
     gap: 5px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 8px;
-}
-
-.hamburger span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: #1e293b;
-    border-radius: 2px;
-    transition: all 0.3s;
-}
-
-.hamburger span:nth-child(1).open {
-    transform: rotate(45deg) translate(5px, 5px);
-}
-
-.hamburger span:nth-child(2).open {
-    opacity: 0;
-}
-
-.hamburger span:nth-child(3).open {
-    transform: rotate(-45deg) translate(5px, -5px);
 }
 
 /* ===== Mobile Menu ===== */
