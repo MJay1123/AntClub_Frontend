@@ -7,7 +7,8 @@ export const authApi = {
 export const clubApi = {
     getClubListAll: () => api.get('/club'),
     getMemberClubs: (memberId) => api.get(`/club/member/${memberId}`),
-    getClub: (clubId) => api.get(`/club/${clubId}`)
+    getClub: (clubId) => api.get(`/club/${clubId}`),
+    createClub: (request) => api.post(`/club`, request),
 }
 
 export const clubMemberApi = {

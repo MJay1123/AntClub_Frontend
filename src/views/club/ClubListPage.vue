@@ -7,6 +7,13 @@
             <p>다양한 동아리를 탐색하고 참여해보세요</p>
         </section>
 
+        <div class="flex-between mb-3 w-100">
+          <h1 class="title" style="margin-bottom: 0;">새 모임 생성하기</h1>
+          <button type="submit" class="btn btn-primary shadow-hover" @click="router.push('/club/create')">
+            동아리 생성
+          </button>
+        </div>
+
         <!-- ===== 전체 동아리 탐색 ===== -->
         <section class="section-explore" v-if="allClubs">
             <div class="section-title">

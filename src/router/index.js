@@ -9,6 +9,7 @@ import ManageClubPage from "@/views/club/ManageClubPage.vue";
 import ClubMemberPage from "@/views/club/ClubMemberPage.vue";
 import ClubSchedulePage from "@/views/club/ClubSchedulePage.vue";
 import ClubDuePage from "@/views/club/ClubDuePage.vue";
+import CreateClubPage from "@/views/club/CreateClubPage.vue";
 
 const routes = [
   {
@@ -36,6 +37,11 @@ const routes = [
     path: '/club',
     name: 'ClubList',
     component: ClubListPage
+  },
+  {
+    path: '/club/create',
+    name: 'CreateClub',
+    component: CreateClubPage
   },
   {
     path: '/club/:clubId',
