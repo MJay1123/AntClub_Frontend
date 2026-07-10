@@ -351,7 +351,7 @@ const errors = reactive({
     name: '',
     phoneNumber: '',
     birthDate: '',
-    gender: '',
+    gender: '', 
     universityId: '',
     collegeId: '',
     departmentId: '',
@@ -515,8 +515,7 @@ const handleSubmit = async () => {
         birthDate: form.birthDate,
         phoneNumber: form.phoneNumber,
 
-        schoolId: Number(form.schoolId),
-        majorId: Number(form.majorId),
+        departmentId: Number(form.departmentId),
         studentId: form.studentId,
         grade: form.enrollmentStatus === 'ENROLLED' ? Number(form.grade) : 0,
         enrollmentStatus: form.enrollmentStatus,
